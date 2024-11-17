@@ -21,7 +21,7 @@
 
 #ifndef MCP3002_H_
 #define MCP3002_H_
-#include "stm32f3xx_hal.h"
+#include "stm32g4xx_hal.h"
 #define CURRENT_READER_OFFLINE 2048
 
 class MCP3002

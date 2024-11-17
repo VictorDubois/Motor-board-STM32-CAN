@@ -8,7 +8,7 @@
 #ifndef DCMOTORHARDWARE_H_
 #define DCMOTORHARDWARE_H_
 #include <stdint.h>
-#include "stm32f3xx_hal.h"
+#include "stm32g4xx_hal.h"
 #define M_L             0
 #define M_R             1
 #define NB_MOTORS 		2

@@ -24,6 +24,12 @@ float test_message_received = 0;
 unsigned int nb_updates_without_message = 0;
 
 
+FDCAN_RxHeaderTypeDef RxHeader;
+uint8_t RxData[8];
+FDCAN_TxHeaderTypeDef TxHeader;
+uint8_t TxData[8];
+
+
 float get_float(const uint8_t* a_string, const int a_beginning)
 {
 	char hexValue[9];
@@ -550,11 +556,23 @@ void toggleLed()
 	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); // Toggle LED on GPIOA Pin 5
 }
 
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
-	CAN_RxHeaderTypeDef   RxHeader;
+  if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET)
+  {
+    /* Retrieve Rx messages from RX FIFO0 */
+    if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
+    {
+    Error_Handler();
+    }
+  }
+}
+
+/*void RxFifo0Callback(FDCAN_HandleTypeDef *hcan)
+{
+	FDCAN_RxHeaderTypeDef   RxHeader;
 	uint8_t               RxData[8];
-	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
+	if (HAL_FDCAN_GetRxMessage(hcan, FDCAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
 	{
 		Error_Handler();
 	}
@@ -562,9 +580,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 	{
 	    //datacheck = 1;
 	}
-}
+}*/
 
-void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHandler, UART_HandleTypeDef * huart2, CAN_HandleTypeDef* hcan)
+void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan)
 {
 	MotorBoard myboard = MotorBoard(a_motorTimHandler, huart2);
 
@@ -573,7 +591,17 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 
 	// CAN sandbox, from https://controllerstech.com/can-protocol-in-stm32/
 
-	CAN_TxHeaderTypeDef   TxHeader;
+	/* Set the data to be transmitted */
+	TxData[0] = 0;
+	TxData[1] = 0xAD;
+
+	/* Start the Transmission process */
+	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
+	{
+		/* Transmission request Error */
+		Error_Handler();
+	}
+	/*FDCAN_TxHeaderTypeDef   TxHeader;
 	uint8_t               TxData[8];
 	uint32_t              TxMailbox;
 
@@ -585,10 +613,13 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 	TxData[0] = 50;
 	TxData[1] = 0xAA;
 
-	if (HAL_CAN_AddTxMessage(hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
+//		if (HAL_FDCAN_AddTxMessage(hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
 	{
 	   Error_Handler ();
-	}
+	}*/
+
+
 
 	/*CAN_FilterTypeDef canfilterconfig;
 
@@ -603,12 +634,12 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 	canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT;
 	canfilterconfig.SlaveStartFilterBank = 20;  // how many filters to assign to the CAN1 (master can)
 
-	HAL_CAN_ConfigFilter(&hcan1, &canfilterconfig);*/
+	HAL_CAN_ConfigFilter(&hcan1, &canfilterconfig);
 
-	if (HAL_CAN_ActivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+	if (HAL_FDCAN_ActivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)//@todo add this?
 	{
 	  Error_Handler();
-	}
+	}*/
 
 	HAL_TIM_Base_Start_IT(a_loopTimHandler);
 	uint32_t waiting_time = 5;

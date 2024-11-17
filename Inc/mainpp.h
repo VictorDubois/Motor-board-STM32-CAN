@@ -21,7 +21,7 @@
 #include <krabi_msgs/SetOdom.h>*/
 #include "msgs.h"
 #include <MCP3002.h>
-#include "stm32f3xx_hal.h"
+#include "stm32g4xx_hal.h"
 #include "DCMotor.h"
 
 #define UPDATE_FREQ 10
@@ -99,7 +99,7 @@ void toggleLed();
 
 
 void setup();
-void loop(TIM_HandleTypeDef* motorTimHandler, TIM_HandleTypeDef* loopTimHandler, UART_HandleTypeDef * huart2, CAN_HandleTypeDef* hcan);
+void loop(TIM_HandleTypeDef* motorTimHandler, TIM_HandleTypeDef* loopTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan);
 
 #ifdef __cplusplus
 }

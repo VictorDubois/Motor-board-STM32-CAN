@@ -10,7 +10,7 @@
 
 #include "DCMotorHardware.h"
 #include "MCP3002.h"
-#include "stm32f3xx_hal.h"
+#include "stm32g4xx_hal.h"
 
 #define M_L             0
 #define M_R             1
