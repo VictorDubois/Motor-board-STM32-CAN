@@ -1,0 +1,3 @@
+[submodule "Inc/CanStruct"]
+	path = Inc/CanStruct
+	url = git@github.com:VictorDubois/CanStruct.git
