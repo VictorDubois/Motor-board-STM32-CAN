@@ -5,6 +5,7 @@
  *      Author: yoneken
  */
 #include <mainpp.h>
+#include <CanStruct/can_structs.h>
 #include <constants.h>
 extern "C" {
 	#include "main.h"
@@ -123,12 +124,22 @@ void read_serial()
 
 void motors_cmd_cb(const krabi_msgs::motors_cmd &motors_cmd_msg)
 {
+	CAN::MotorBoardCmdInput motors_cmd_can;
+	motors_cmd_can.PWM_override_left = motors_cmd_msg.PWM_override_left;
+	motors_cmd_can.PWM_override_right = motors_cmd_msg.PWM_override_right;
+	motors_cmd_can.enable_motors = motors_cmd_msg.enable_motors;
+	motors_cmd_can.override_PWM = motors_cmd_msg.override_PWM;
+	motors_cmd_can.reset_encoders = motors_cmd_msg.reset_encoders;
+}
+
+void motors_cmd_cb(const CAN::MotorBoardCmdInput &motors_cmd_msg)
+{
 	if (motors_cmd_msg.reset_encoders)
 	{
 		MotorBoard::set_odom(0, 0, 0);
 	}
 
-	MotorBoard::getDCMotor().set_enable_motors(motors_cmd_msg.enable_motors);
+	MotorBoard::getDCMotor().set_enable_motors((bool)motors_cmd_msg.enable_motors);
 
 	if (!motors_cmd_msg.enable_motors) {
 		MotorBoard::getDCMotor().resetMotors();
@@ -563,8 +574,51 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     /* Retrieve Rx messages from RX FIFO0 */
     if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
     {
-    Error_Handler();
+    	Error_Handler();
     }
+
+    if ((RxHeader.Identifier == 0x321) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_2))
+    {
+      //LED_Display(RxData[0]);
+      //ubKeyNumber = RxData[0];
+    }
+
+    if ((RxHeader.Identifier == CAN::can_ids::CMD_VEL) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+    {
+    	CAN::CmdVel l_cmd_vel;
+        memcpy(&(l_cmd_vel.linear_x_m), RxData, sizeof(float));
+        memcpy(&(l_cmd_vel.angular_z_rad), RxData + sizeof(float), sizeof(float));
+
+        MotorBoard::getDCMotor().set_speed_order(metersToTicks(l_cmd_vel.linear_x_m), radsToTicks(-l_cmd_vel.angular_z_rad));
+    }
+
+    if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_CMD_INPUT) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+	{
+		CAN::MotorBoardCmdInput l_cmd_inputs;
+
+		memcpy(&(l_cmd_inputs), RxData, 8*sizeof(uint8_t));
+
+		motors_cmd_cb(l_cmd_inputs);
+	}
+    if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_CURRENT_INPUT) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+	{
+		CAN::MotorBoardCurrentInput l_cmd_current_inputs;
+
+		memcpy(&(l_cmd_current_inputs), RxData, 8*sizeof(uint8_t));
+
+		MotorBoard::getDCMotor().set_max_current(1000.0f*l_cmd_current_inputs.max_current_mA);
+		MotorBoard::getDCMotor().set_max_current(1000.0f*l_cmd_current_inputs.max_current_left_mA, 1000.0f*l_cmd_current_inputs.max_current_right_mA);
+	}
+
+    if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_ENABLE) && (RxHeader.IdType == FDCAN_STANDARD_ID))
+	{
+		bool l_motor_enable = RxData[0];
+
+		if (!l_motor_enable)
+		{
+			MotorBoard::getDCMotor().resetMotors();
+		}
+	}
   }
 }
 
@@ -596,7 +650,7 @@ static void FDCAN_Config(FDCAN_HandleTypeDef* hcan)
   sFilterConfig.FilterIndex = 0;
   sFilterConfig.FilterType = FDCAN_FILTER_RANGE;
   sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
-  sFilterConfig.FilterID1 = 0x321;
+  sFilterConfig.FilterID1 = 42;
   sFilterConfig.FilterID2 = 0x7FF;
   if (HAL_FDCAN_ConfigFilter(hcan, &sFilterConfig) != HAL_OK)
   {
