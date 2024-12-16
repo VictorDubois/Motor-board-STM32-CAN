@@ -5,7 +5,6 @@
  *      Author: yoneken
  */
 #include <mainpp.h>
-#include <CanStruct/can_structs.h>
 #include <constants.h>
 extern "C" {
 	#include "main.h"
@@ -130,6 +129,8 @@ void motors_cmd_cb(const krabi_msgs::motors_cmd &motors_cmd_msg)
 	motors_cmd_can.enable_motors = motors_cmd_msg.enable_motors;
 	motors_cmd_can.override_PWM = motors_cmd_msg.override_PWM;
 	motors_cmd_can.reset_encoders = motors_cmd_msg.reset_encoders;
+
+	motors_cmd_cb(motors_cmd_can);
 }
 
 void motors_cmd_cb(const CAN::MotorBoardCmdInput &motors_cmd_msg)
@@ -339,8 +340,9 @@ void MotorBoard::set_odom(float a_x, float a_y, float a_theta)
 	theta_offset = a_theta - current_theta;
 }
 
-MotorBoard::MotorBoard(TIM_HandleTypeDef* a_motorTimHandler, UART_HandleTypeDef * huart2) :
-		huart2(huart2)
+MotorBoard::MotorBoard(TIM_HandleTypeDef* a_motorTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan) :
+	huart2(huart2),
+	hcan(hcan)
 {
 
 	while(false)
@@ -536,13 +538,43 @@ void MotorBoard::update() {
 	odom_lighter_msg.speedVx = (float)test_message_received;//ticksToMillimeters((left_speed+right_speed)/2)/1000.f;
 	odom_lighter_msg.speedWz = encoder_left;//((right_speed - left_speed)/TICKS_PER_DEG)*M_PI/180; // rad/s*/
 
+	float speedVx = ticksToMeters((left_speed+right_speed)/2);
+	float speedWz = ticksToRads(right_speed - left_speed); // rad/s
+
 	odom_lighter_msg.poseX = X;
 	odom_lighter_msg.poseY = Y;
 	odom_lighter_msg.angleRz = current_theta_rad;
-	odom_lighter_msg.speedVx = ticksToMeters((left_speed+right_speed)/2);
-	odom_lighter_msg.speedWz = ticksToRads(right_speed - left_speed); // rad/s
-
+	odom_lighter_msg.speedVx = speedVx;
+	odom_lighter_msg.speedWz = speedWz;
 	publish_odom_lighter(huart2);
+
+	/* Set the data to be transmitted */
+	TxHeader.Identifier = CAN::can_ids::ODOMETRY_XY;
+	memcpy(TxData, &(X), sizeof(float));
+	memcpy(TxData + sizeof(float), &(Y), sizeof(float));
+	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
+	{
+		/* Transmission request Error */
+		Error_Handler();
+	}
+
+	TxHeader.Identifier = CAN::can_ids::ODOMETRY_THETA;
+	memcpy(TxData, &(current_theta_rad), sizeof(float));
+	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
+	{
+		/* Transmission request Error */
+		Error_Handler();
+	}
+
+	TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED;
+	memcpy(TxData, &(speedVx), sizeof(float));
+	memcpy(TxData+ sizeof(float), &(speedWz), sizeof(float));
+	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
+	{
+		/* Transmission request Error */
+		Error_Handler();
+	}
+
 
 	if (false && message_counter%100 == 0)
 	{
@@ -575,12 +607,6 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
     {
     	Error_Handler();
-    }
-
-    if ((RxHeader.Identifier == 0x321) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_2))
-    {
-      //LED_Display(RxData[0]);
-      //ubKeyNumber = RxData[0];
     }
 
     if ((RxHeader.Identifier == CAN::can_ids::CMD_VEL) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
@@ -622,20 +648,6 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
   }
 }
 
-/*void RxFifo0Callback(FDCAN_HandleTypeDef *hcan)
-{
-	FDCAN_RxHeaderTypeDef   RxHeader;
-	uint8_t               RxData[8];
-	if (HAL_FDCAN_GetRxMessage(hcan, FDCAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
-	{
-		Error_Handler();
-	}
-	if ((RxHeader.StdId == 0x103))
-	{
-	    //datacheck = 1;
-	}
-}*/
-
 /**
   * @brief  Configures the FDCAN.
   *   None
@@ -672,7 +684,7 @@ static void FDCAN_Config(FDCAN_HandleTypeDef* hcan)
   TxHeader.Identifier = 0x321;
   TxHeader.IdType = FDCAN_STANDARD_ID;
   TxHeader.TxFrameType = FDCAN_DATA_FRAME;
-  TxHeader.DataLength = FDCAN_DLC_BYTES_2;
+  TxHeader.DataLength = FDCAN_DLC_BYTES_8;
   TxHeader.ErrorStateIndicator = FDCAN_ESI_PASSIVE;
   TxHeader.BitRateSwitch = FDCAN_BRS_OFF;
   TxHeader.FDFormat = FDCAN_CLASSIC_CAN;
@@ -682,7 +694,7 @@ static void FDCAN_Config(FDCAN_HandleTypeDef* hcan)
 
 void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan)
 {
-	MotorBoard myboard = MotorBoard(a_motorTimHandler, huart2);
+	MotorBoard myboard = MotorBoard(a_motorTimHandler, huart2, hcan);
 
 	__HAL_UART_CLEAR_OREFLAG(huart2); // Not sure if actually needed
 
@@ -691,10 +703,6 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 
 	FDCAN_Config(hcan);
 
-	/* Set the data to be transmitted */
-	TxData[0] = 0;
-	TxData[1] = 0xAD;
-
 
 	/* Start the Transmission process */
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
@@ -702,45 +710,6 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 		/* Transmission request Error */
 		Error_Handler();
 	}
-	/*FDCAN_TxHeaderTypeDef   TxHeader;
-	uint8_t               TxData[8];
-	uint32_t              TxMailbox;
-
-	TxHeader.IDE = CAN_ID_STD;
-	TxHeader.StdId = 0x446;
-	TxHeader.RTR = CAN_RTR_DATA;
-	TxHeader.DLC = 2;
-
-	TxData[0] = 50;
-	TxData[1] = 0xAA;
-
-	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
-//		if (HAL_FDCAN_AddTxMessage(hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
-	{
-	   Error_Handler ();
-	}*/
-
-
-
-	/*CAN_FilterTypeDef canfilterconfig;
-
-	canfilterconfig.FilterActivation = CAN_FILTER_ENABLE;
-	canfilterconfig.FilterBank = 18;  // which filter bank to use from the assigned ones
-	canfilterconfig.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-	canfilterconfig.FilterIdHigh = 0x446<<5;
-	canfilterconfig.FilterIdLow = 0;
-	canfilterconfig.FilterMaskIdHigh = 0x446<<5;
-	canfilterconfig.FilterMaskIdLow = 0x0000;
-	canfilterconfig.FilterMode = CAN_FILTERMODE_IDMASK;
-	canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT;
-	canfilterconfig.SlaveStartFilterBank = 20;  // how many filters to assign to the CAN1 (master can)
-
-	HAL_CAN_ConfigFilter(&hcan1, &canfilterconfig);
-
-	if (HAL_FDCAN_ActivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)//@todo add this?
-	{
-	  Error_Handler();
-	}*/
 
 	HAL_TIM_Base_Start_IT(a_loopTimHandler);
 	uint32_t waiting_time = 5;
@@ -754,11 +723,8 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 
 	while(true) {
 		myboard.update();
-		if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
-		{
-			/* Transmission request Error */
-			Error_Handler();
-		}
+
+
 
 		HAL_Delay(waiting_time);
 	}

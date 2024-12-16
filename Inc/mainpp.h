@@ -23,6 +23,7 @@
 #include <MCP3002.h>
 #include "stm32g4xx_hal.h"
 #include "DCMotor.h"
+#include <CanStruct/can_structs.h>
 
 #define UPDATE_FREQ 10
 #define MS_BETWEEN_UPDATES 1000/UPDATE_FREQ
@@ -54,6 +55,7 @@ constexpr int32_t radsToTicks(float rads);
 constexpr float ticksToRads(int32_t ticks);
 
 void motors_cmd_cb(const krabi_msgs::motors_cmd &motors_cmd_msg);
+void motors_cmd_cb(const CAN::MotorBoardCmdInput &motors_cmd_msg);
 void cmd_vel_cb(const geometry_msgs::Twist& twist);
 void parameters_cb(const krabi_msgs::motors_parameters& parameters);
 void enable_motor_cb(const std_msgs::Bool& enable);
@@ -61,7 +63,7 @@ void enable_motor_cb(const std_msgs::Bool& enable);
 class MotorBoard
 {
 public:
-	MotorBoard(TIM_HandleTypeDef* motorTimHandler, UART_HandleTypeDef * huart2);
+	MotorBoard(TIM_HandleTypeDef* motorTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan);
 	MotorBoard();
 	~MotorBoard();
 
@@ -87,6 +89,7 @@ private:
 	static float theta_offset;
 	volatile static long long message_counter;
 	UART_HandleTypeDef * huart2;
+	FDCAN_HandleTypeDef * hcan;
 	void resetUart();
 };
 
