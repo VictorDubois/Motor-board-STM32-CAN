@@ -79,10 +79,8 @@ private:
 	static DCMotorHardware motorsHardware;
 	static DCMotor motors;
 	static MCP3002 currentReader;
-	volatile long last_encoder_left = 0;
-	volatile long last_encoder_right = 0;
-	volatile int32_t last_encoder_left_angular = 0;
-	volatile int32_t last_encoder_right_angular = 0;
+	static volatile long last_encoder_left;
+	static volatile long last_encoder_right;
 	float compute_linear_dist(const long encoder_left, const long encoder_right);
 	static float X;
 	static float Y;
