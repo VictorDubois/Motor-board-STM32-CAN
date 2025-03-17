@@ -307,7 +307,8 @@ DCMotorHardware MotorBoard::motorsHardware;
 DCMotor MotorBoard::motors;
 MCP3002 MotorBoard::currentReader;
 volatile long long MotorBoard::message_counter = 0;
-
+volatile long MotorBoard::last_encoder_left = 0;
+volatile long MotorBoard::last_encoder_right = 0;
 float MotorBoard::X = 0;
 float MotorBoard::Y = 0;
 float MotorBoard::theta_offset = 0;
@@ -321,6 +322,9 @@ void MotorBoard::set_odom(float a_x, float a_y, float a_theta)
 
 	float current_theta = get_orientation_float(encoder_left, encoder_right);
 	theta_offset = a_theta - current_theta;
+
+	last_encoder_left = motors.get_encoder_ticks(M_L);
+	last_encoder_right = motors.get_encoder_ticks(M_R);
 }
 
 MotorBoard::MotorBoard(TIM_HandleTypeDef* a_motorTimHandler, UART_HandleTypeDef * huart2) :
