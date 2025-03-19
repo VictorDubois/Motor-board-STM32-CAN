@@ -322,7 +322,7 @@ void MotorBoard::set_odom(float a_x, float a_y, float a_theta)
 	int16_t encoder_left = motors.get_encoder_ticks(M_L);
 	int16_t encoder_right = motors.get_encoder_ticks(M_R);
 
-	float current_theta = get_orientation_float(encoder_left, encoder_right);
+	float current_theta = get_orientation_float(encoder_left, encoder_right, 0);
 	theta_offset = a_theta - current_theta;
 
 	last_encoder_left = motors.get_encoder_ticks(M_L);
@@ -365,11 +365,11 @@ DCMotor& MotorBoard::getDCMotor(void) {
 /*
     Return the Robot's orientation, in degrees, with respect to the last encoder reset.
 */
-float get_orientation_float(int32_t encoder1, int32_t encoder2)
+float get_orientation_float(int32_t encoder1, int32_t encoder2, float offset)
 {
 
 
-    float absolute_orientation = fmod((encoder2 - encoder1) / TICKS_PER_DEG, 360);
+    float absolute_orientation = fmod(ticksToDegrees(encoder2 - encoder1) + offset, 360);
 
     if (absolute_orientation >= 0)
         return (absolute_orientation);
@@ -517,8 +517,8 @@ void MotorBoard::update() {
 	int32_t left_speed = motors.get_speed(M_L);
 
 	float linear_dist = compute_linear_dist(encoder_left, encoder_right);
-	float current_theta = get_orientation_float(int32_t_encoder_left, int32_t_encoder_right);
-	current_theta += theta_offset;
+	float current_theta = get_orientation_float(int32_t_encoder_left, int32_t_encoder_right, theta_offset);
+	//current_theta += theta_offset;
 
 	float current_theta_rad = current_theta * M_PI / 180.f;
 
