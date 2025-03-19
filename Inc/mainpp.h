@@ -44,7 +44,7 @@ ros::Publisher odom_lighter_pub("odom_lighter", &odom_lighter_msg);*/
 //ros::Publisher odom_pub("odom", &odom_msg);
 //ros::Publisher asserv_pub("asserv", &asserv_msg);
 
-float get_orientation_float(int32_t encoder1, int32_t encoder2);
+float get_orientation_float(int32_t encoder1, int32_t encoder2, float offset);
 constexpr float ticksToMillimeters(int32_t ticks);
 constexpr int32_t millimetersToTicks(float millimeters);
 constexpr int32_t metersToTicks(float meters);
