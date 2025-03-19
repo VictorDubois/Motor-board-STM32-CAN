@@ -101,6 +101,12 @@ DCMotor::DCMotor(DCMotorHardware* a_hardware, MCP3002* a_current_reader) : hardw
 	dt=0.42f;
 }
 
+void DCMotor::resetEncodersCounter()
+{
+	hardware->resetEncodersCounter();
+}
+
+
 void DCMotor::override_PWM(int pwm_left, int pwm_right)
 {
 	resetMotors();

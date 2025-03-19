@@ -150,6 +150,8 @@ public:
 	int32_t get_linear_speed_order() {return linear_speed_order;}
 	int32_t get_angular_speed_order() {return angular_speed_order;}
 
+	void resetEncodersCounter();
+
 private:
 	float dt;
 	volatile int32_t speed_order[NB_MOTORS];

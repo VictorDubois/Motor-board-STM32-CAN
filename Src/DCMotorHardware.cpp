@@ -40,6 +40,11 @@ int16_t DCMotorHardware::getTicks(const uint32_t encoderId) {
 	return encoder_right_timer->CNT;
 }
 
+void DCMotorHardware::resetEncodersCounter(){
+	encoder_left_timer->CNT = 0;
+	encoder_right_timer->CNT = 0;
+}
+
 uint32_t DCMotorHardware::getMilliSecondsElapsed() {
 	return HAL_GetTick();
 }
