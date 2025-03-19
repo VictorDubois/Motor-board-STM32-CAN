@@ -317,6 +317,7 @@ float MotorBoard::theta_offset = 0;
 
 void MotorBoard::set_odom(float a_x, float a_y, float a_theta)
 {
+	motors.resetEncodersCounter();
 	X = a_x;
 	Y = a_y;
 	int16_t encoder_left = motors.get_encoder_ticks(M_L);

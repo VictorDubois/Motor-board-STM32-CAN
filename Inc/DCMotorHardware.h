@@ -30,6 +30,8 @@ public:
 			const int32_t motor_left_timer_channel);
 	~DCMotorHardware();
 
+	void resetEncodersCounter();
+
 	int16_t getTicks(uint32_t encoderId);
 
 	/**
