@@ -301,22 +301,22 @@ void DCMotor::control_ramp_speed_polar(void) {
 	//float linear_Ku = 0.063f;//0.085f;//0.1;
 	//float linear_Tu = 0.08238f;//0.0844;
 
-	float linear_Ku = 0.062f;
+	float linear_Ku = 0.012f;//0.02f;//0.012f;
 	//linear_Ku = 0.05f;
-	float linear_Tu = 0.06818f;
+	float linear_Tu = 0.06174285714f;
 	//linear_Tu = 0.05f;
-	float linear_pid_p = 0.45f*linear_Ku;//0.06f;//0.38;//0.5 => explose. 0.1, 0.2 => marche.0.35, 0.38 => marche avec légère oscillation.0.4 oscille
-	linear_pid_p *=0.8f;
-	float linear_pid_i = 0.54f*linear_Ku/linear_Tu;//1.421800948f;
+	float linear_pid_p =linear_Ku * 0.45f;//0.06f;//0.38;//0.5 => explose. 0.1, 0.2 => marche.0.35, 0.38 => marche avec légère oscillation.0.4 oscille
+	linear_pid_p *=0.5f;
+	float linear_pid_i = linear_Ku * 0.54f/linear_Tu;//1.421800948f;
 	float linear_pid_d = 0.0f*linear_Ku*linear_Tu;//0.000633f;
 
 	//float linear_pid_p = 0.6f*linear_Ku;//0.06f;//0.38;//0.5 => explose. 0.1, 0.2 => marche.0.35, 0.38 => marche avec légère oscillation.0.4 oscille
 	//float linear_pid_i = 1.2f*linear_Ku/linear_Tu;//1.421800948f;
 	//float linear_pid_d = 0.075f*linear_Ku*linear_Tu;//0.000633f;
 
-	/*linear_pid_p = 0.f;//0.062f;//0.067f;//0.07//0.035/0.085f;//0.06f;//0.38;//0.5 => explose. 0.1, 0.2 => marche.0.35, 0.38 => marche avec légère oscillation.0.4 oscilleu
+	linear_pid_p = 0.12f;//0.062f;//0.067f;//0.07//0.035/0.085f;//0.06f;//0.38;//0.5 => explose. 0.1, 0.2 => marche.0.35, 0.38 => marche avec légère oscillation.0.4 oscilleu
 	linear_pid_i = 0;//1.421800948f;
-	linear_pid_d = 0;*/
+	linear_pid_d = 0;
 
 
 	// Ziegler Nichols: Ku = 0.15, Tu = 0.10855
@@ -325,15 +325,16 @@ void DCMotor::control_ramp_speed_polar(void) {
 	float angular_pid_i = 1.105481345f;
 	float angular_pid_d = 0.000814125f;*/
 
-	float angular_Ku = 0.095f;//0.075f;
-	float angular_Tu = 0.17647f;//0.122f;
-	float angular_pid_p = 0.45f*angular_Ku;
-	float angular_pid_i = 0.64f*angular_Ku/angular_Tu;
+	float angular_Ku = 0.0056f;//0.075f;
+	float angular_Tu = 0.065757576f;//0.122f;
+	float angular_pid_p = angular_Ku * 0.45f ;
+	angular_pid_p *=0.8f;
+	float angular_pid_i = angular_Ku * 0.64f/angular_Tu;
 	float angular_pid_d = 0.0f*angular_Ku*angular_Tu;
 
-	/*angular_pid_p = 0.095f;//0.085f;
+	angular_pid_p = 0;//0.0056;//>0.0065//0.008;//0.085f;
 	angular_pid_i = 0;
-	angular_pid_d = 0;*/
+	angular_pid_d = 0;
 
 	int32_t linear_speed_error = linear_speed_order - linear_speed;
 	int32_t angular_speed_error = angular_speed_order - angular_speed;
@@ -352,8 +353,8 @@ void DCMotor::control_ramp_speed_polar(void) {
 
 
 	int32_t linear_voltage =
-		 (linear_pid_p*linear_speed_error +
-				 linear_pid_i*linear_speed_integ_error + linear_pid_d * (linear_speed_error - linear_last_speed_error)/dt);
+		 (linear_speed_error*linear_pid_p +
+				 linear_speed_integ_error * linear_pid_i+ (linear_speed_error - linear_last_speed_error) * linear_pid_d/dt);
 
 	linear_last_speed_error = linear_speed_error;
 
@@ -361,8 +362,8 @@ void DCMotor::control_ramp_speed_polar(void) {
 	angular_speed_integ_error += angular_speed_error* dt; // dt is included in pid_i because it is constant. If we change dt, pid_i must be scaled
 
 	int32_t angular_voltage =
-		 (angular_pid_p*angular_speed_error +
-				 angular_pid_i*angular_speed_integ_error + angular_pid_d * (angular_speed_error - angular_last_speed_error)/dt);
+		 (angular_speed_error * angular_pid_p +
+				 angular_speed_integ_error * angular_pid_i + (angular_speed_error - angular_last_speed_error) * angular_pid_d/dt);
 
 	angular_last_speed_error = angular_speed_error;
 
