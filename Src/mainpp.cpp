@@ -326,6 +326,8 @@ MCP3002 MotorBoard::currentReader;
 volatile long long MotorBoard::message_counter = 0;
 volatile long MotorBoard::last_encoder_left = 0;
 volatile long MotorBoard::last_encoder_right = 0;
+volatile long MotorBoard::int32_t_encoder_left = 0;
+volatile long MotorBoard::int32_t_encoder_right = 0;
 float MotorBoard::X = 0;
 float MotorBoard::Y = 0;
 float MotorBoard::theta_offset = 0;
@@ -342,6 +344,9 @@ void MotorBoard::set_odom(float a_x, float a_y, float a_theta)
 
 	last_encoder_left = motors.get_encoder_ticks(M_L);
 	last_encoder_right = motors.get_encoder_ticks(M_R);
+
+	int32_t_encoder_left = motors.get_encoder_ticks(M_L);
+	int32_t_encoder_right = motors.get_encoder_ticks(M_R);
 }
 
 MotorBoard::MotorBoard(TIM_HandleTypeDef* a_motorTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan) :
@@ -521,13 +526,16 @@ void MotorBoard::update() {
 
 	encoders_msg.encoder_left = encoder_left;
 	encoders_msg.encoder_right = encoder_right;
+
+	int32_t_encoder_left = fixOverflow(encoder_left, int32_t_encoder_left);
+	int32_t_encoder_right = fixOverflow(encoder_right, int32_t_encoder_right);
 	//publish_encoders(huart2); // Currently, it is only possible to transmit one message
 
 	int32_t right_speed = motors.get_speed(M_R);
 	int32_t left_speed = motors.get_speed(M_L);
 
 	float linear_dist = compute_linear_dist(encoder_left, encoder_right);
-	float current_theta = get_orientation_float(encoder_left, encoder_right);
+	float current_theta = get_orientation_float(int32_t_encoder_left, int32_t_encoder_right);
 	current_theta += theta_offset;
 
 	float current_theta_rad = current_theta * M_PI / 180.f;
