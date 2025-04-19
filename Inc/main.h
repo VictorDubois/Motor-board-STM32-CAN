@@ -65,12 +65,12 @@ void Error_Handler(void);
 #define USART2_TX_GPIO_Port GPIOA
 #define USART2_RX_Pin GPIO_PIN_3
 #define USART2_RX_GPIO_Port GPIOA
-#define SPI_CLK_Pin GPIO_PIN_5
-#define SPI_CLK_GPIO_Port GPIOA
-#define SPI_MISO_Pin GPIO_PIN_6
-#define SPI_MISO_GPIO_Port GPIOA
-#define SPI_MOSI_Pin GPIO_PIN_7
-#define SPI_MOSI_GPIO_Port GPIOA
+#define BRAKE_B_Pin GPIO_PIN_5
+#define BRAKE_B_GPIO_Port GPIOA
+#define CURRENT_A_Pin GPIO_PIN_6
+#define CURRENT_A_GPIO_Port GPIOA
+#define CURRENT_B_Pin GPIO_PIN_7
+#define CURRENT_B_GPIO_Port GPIOA
 #define BRAKE_Pin GPIO_PIN_0
 #define BRAKE_GPIO_Port GPIOB
 #define DIR_A_Pin GPIO_PIN_10
@@ -85,6 +85,7 @@ void Error_Handler(void);
 #define DIR_B_GPIO_Port GPIOB
 #define LD2_Pin GPIO_PIN_8
 #define LD2_GPIO_Port GPIOB
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

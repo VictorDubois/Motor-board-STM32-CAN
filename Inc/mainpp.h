@@ -63,7 +63,7 @@ void enable_motor_cb(const std_msgs::Bool& enable);
 class MotorBoard
 {
 public:
-	MotorBoard(TIM_HandleTypeDef* motorTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan);
+	MotorBoard(TIM_HandleTypeDef* motorTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan, ADC_HandleTypeDef* hadc2);
 	MotorBoard();
 	~MotorBoard();
 
@@ -103,7 +103,7 @@ void toggleLed();
 
 
 void setup();
-void loop(TIM_HandleTypeDef* motorTimHandler, TIM_HandleTypeDef* loopTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan);
+void loop(TIM_HandleTypeDef* motorTimHandler, TIM_HandleTypeDef* loopTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan, ADC_HandleTypeDef* hadc2);
 
 #ifdef __cplusplus
 }

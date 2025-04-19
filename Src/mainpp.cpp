@@ -350,7 +350,7 @@ void MotorBoard::set_odom(float a_x, float a_y, float a_theta)
 	int32_t_encoder_right = motors.get_encoder_ticks(M_R);
 }
 
-MotorBoard::MotorBoard(TIM_HandleTypeDef* a_motorTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan) :
+MotorBoard::MotorBoard(TIM_HandleTypeDef* a_motorTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan, ADC_HandleTypeDef* hadc2) :
 	huart2(huart2),
 	hcan(hcan)
 {
@@ -364,7 +364,12 @@ MotorBoard::MotorBoard(TIM_HandleTypeDef* a_motorTimHandler, UART_HandleTypeDef 
 	HAL_Delay(1);
 
 	motorsHardware = DCMotorHardware(TIM1, TIM2, a_motorTimHandler, TIM_CHANNEL_4, a_motorTimHandler, TIM_CHANNEL_1);
+
+#ifdef USE_MCP3002
 	currentReader = MCP3002();
+#else
+	currentReader = MCP3002(hadc2);
+#endif
 	motors = DCMotor(&motorsHardware, &currentReader);
 
 	motors.set_max_acceleration(millimetersToTicks(9810));//mm/s/s
@@ -705,11 +710,13 @@ static void FDCAN_Config(FDCAN_HandleTypeDef* hcan)
   TxHeader.MessageMarker = 0;
 }
 
-void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan)
+void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan, ADC_HandleTypeDef* hadc2)
 {
-	MotorBoard myboard = MotorBoard(a_motorTimHandler, huart2, hcan);
+	MotorBoard myboard = MotorBoard(a_motorTimHandler, huart2, hcan, hadc2);
 
 	__HAL_UART_CLEAR_OREFLAG(huart2); // Not sure if actually needed
+
+	HAL_ADC_Start(hadc2);
 
 
 	// CAN sandbox, from https://community.st.com/t5/stm32-mcus/how-to-use-fdcan-to-create-a-simple-communication-with-a-basic/ta-p/671766

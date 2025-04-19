@@ -28,6 +28,12 @@ class MCP3002
 {
   public:
     MCP3002();
+#ifndef USE_MCP3002
+    MCP3002(ADC_HandleTypeDef* a_hadc2);
+  private:
+    ADC_HandleTypeDef* m_hadc2;
+#endif
+  public:
     int readADC(int adcnum);
     int readCurrent(int adcnum);
   private:

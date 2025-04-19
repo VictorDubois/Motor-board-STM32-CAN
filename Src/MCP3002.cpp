@@ -17,6 +17,7 @@ extern "C" {
 
 #define INVERTED_HIGH LOW
 #define INVERTED_LOW HIGH
+#ifdef USE_MCP3002
 MCP3002::MCP3002() {
 	m_miso_gpio_bank =  SPI_MISO_GPIO_Port;
 	m_miso_gpio = SPI_MISO_Pin;
@@ -27,15 +28,50 @@ MCP3002::MCP3002() {
 	m_cs_gpio_bank = SPI_CS_GPIO_Port;
 	m_cs_gpio = SPI_CS_Pin;
 }
+#else
+	MCP3002::MCP3002() {}
+	MCP3002::MCP3002(ADC_HandleTypeDef* a_hadc2): m_hadc2(a_hadc2) {}
+#endif
+
+
 
 int MCP3002::readCurrent(int adcnum) {
+
+
+	//return 20;
+#ifdef USE_MCP3002
 	return 2048 - readADC(adcnum);
+#else
+	return readADC(adcnum);
+#endif
 }
 
 
 // read SPI data from MCP3002 chip, 8 possible adc's (0 thru 7)
 int MCP3002::readADC(int adcnum) {
+	ADC_ChannelConfTypeDef sConfig = {0};
+	sConfig.Channel = ADC_CHANNEL_3;
+	  sConfig.Rank = ADC_REGULAR_RANK_1;
+	  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+	  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+	  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+	  sConfig.Offset = 0;
 
+	  if(adcnum == 1)
+	  {
+			sConfig.Channel = ADC_CHANNEL_4;
+	  }
+
+	  if (HAL_ADC_ConfigChannel(m_hadc2, &sConfig) != HAL_OK)
+	  {
+	    Error_Handler();
+	  }
+
+	  HAL_ADC_PollForConversion(m_hadc2, HAL_MAX_DELAY);
+	  uint32_t adc_val = HAL_ADC_GetValue(m_hadc2);
+
+	  return adc_val;
+#ifdef USE_MCP3002
   if ((adcnum > 7) || (adcnum < 0)) return -1; // Wrong adc address return -1
 
   // algo
@@ -93,5 +129,7 @@ int MCP3002::readADC(int adcnum) {
 
   adcout >>= 1; //      # first bit is 'null' so drop it
   return adcout;
+#endif
+  return 10;
 }
 
