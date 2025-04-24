@@ -66,9 +66,19 @@ int MCP3002::readADC(int adcnum) {
 	  {
 	    Error_Handler();
 	  }
+	  HAL_ADC_Start(m_hadc2);
 
-	  HAL_ADC_PollForConversion(m_hadc2, HAL_MAX_DELAY);
+	  int32_t ret_code = HAL_ADC_PollForConversion(m_hadc2, 100);
+
+	  if (ret_code == HAL_TIMEOUT)
+	  {
+		  HAL_ADC_Stop(m_hadc2);
+		  return -1;
+	  }
+
 	  uint32_t adc_val = HAL_ADC_GetValue(m_hadc2);
+
+	  HAL_ADC_Stop(m_hadc2);
 
 	  return adc_val;
 #ifdef USE_MCP3002
