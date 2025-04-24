@@ -716,7 +716,6 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 
 	__HAL_UART_CLEAR_OREFLAG(huart2); // Not sure if actually needed
 
-	HAL_ADC_Start(hadc2);
 
 
 	// CAN sandbox, from https://community.st.com/t5/stm32-mcus/how-to-use-fdcan-to-create-a-simple-communication-with-a-basic/ta-p/671766
