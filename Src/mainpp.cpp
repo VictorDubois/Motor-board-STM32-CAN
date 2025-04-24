@@ -573,7 +573,7 @@ void MotorBoard::update() {
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
 		/* Transmission request Error */
-		Error_Handler();
+		MotorBoard::getDCMotor().resetMotors();
 	}
 
 	TxHeader.Identifier = CAN::can_ids::ODOMETRY_THETA;
@@ -581,7 +581,7 @@ void MotorBoard::update() {
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
 		/* Transmission request Error */
-		Error_Handler();
+		MotorBoard::getDCMotor().resetMotors();
 	}
 
 	TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED;
@@ -590,7 +590,7 @@ void MotorBoard::update() {
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
 		/* Transmission request Error */
-		Error_Handler();
+		MotorBoard::getDCMotor().resetMotors();
 	}
 
 
@@ -727,7 +727,7 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
 		/* Transmission request Error */
-		Error_Handler();
+		MotorBoard::getDCMotor().resetMotors();
 	}
 
 	HAL_TIM_Base_Start_IT(a_loopTimHandler);
