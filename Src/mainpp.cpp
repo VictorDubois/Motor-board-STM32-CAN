@@ -567,12 +567,33 @@ void MotorBoard::update() {
 	publish_odom_lighter(huart2);
 
 	/* Set the data to be transmitted */
-	TxHeader.Identifier = CAN::can_ids::ODOMETRY_XY;
+	TxHeader.Identifier = CAN::can_ids::ODOMETRY_LIGHT;
+    int32_t poseX_mm = X * 1000;
+    int32_t poseY_mm = Y * 1000;
+    int32_t angleRz_centi_deg = current_theta_rad * (100.0f * 180.f / M_PI);
+
+    TxData[0] = (poseX_mm >> 16) & 0xFF;
+    TxData[1] = (poseX_mm >> 8) & 0xFF;
+    TxData[2] = (poseX_mm) & 0xFF;
+    TxData[3] = (poseY_mm >>16) & 0xFF;
+    TxData[4] = (poseY_mm >> 8) & 0xFF;
+    TxData[5] = (poseY_mm) & 0xFF;
+    TxData[6] = (angleRz_centi_deg >> 8) & 0xFF;
+    TxData[7] = (angleRz_centi_deg) & 0xFF;
+	//memcpy(TxData, &(X), sizeof(float));
+	//memcpy(TxData + sizeof(float), &(Y), sizeof(float));
+	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
+	{
+		/* Transmission request Error */
+		MotorBoard::getDCMotor().resetMotors();
+	}
+
+	/*TxHeader.Identifier = CAN::can_ids::ODOMETRY_XY_FLOAT;
 	memcpy(TxData, &(X), sizeof(float));
 	memcpy(TxData + sizeof(float), &(Y), sizeof(float));
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
-		/* Transmission request Error */
+		// Transmission request Error
 		MotorBoard::getDCMotor().resetMotors();
 	}
 
@@ -580,11 +601,30 @@ void MotorBoard::update() {
 	memcpy(TxData, &(current_theta_rad), sizeof(float));
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
+		// Transmission request Error
+		MotorBoard::getDCMotor().resetMotors();
+	}*/
+
+	TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED;
+    int32_t speedVx_µm_s = speedVx/1000000.f;   // 4 bytes
+    int32_t speedWz_mrad_s = speedWz/1000.F; // 4 bytes
+
+	TxData[0] = (speedVx_µm_s >> 24) & 0xFF;
+	TxData[1] = (speedVx_µm_s >> 16) & 0xFF;
+	TxData[2] = (speedVx_µm_s >> 8) & 0xFF;
+	TxData[3] = (speedVx_µm_s ) & 0xFF;
+	TxData[4] = (speedWz_mrad_s >> 24) & 0xFF;
+	TxData[5] = (speedWz_mrad_s >> 16) & 0xFF;
+	TxData[6] = (speedWz_mrad_s >> 8) & 0xFF;
+	TxData[7] = (speedWz_mrad_s) & 0xFF;
+
+	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
+	{
 		/* Transmission request Error */
 		MotorBoard::getDCMotor().resetMotors();
 	}
 
-	TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED;
+	TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED_FLOAT;
 	memcpy(TxData, &(speedVx), sizeof(float));
 	memcpy(TxData+ sizeof(float), &(speedWz), sizeof(float));
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
@@ -627,20 +667,51 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     	Error_Handler();
     }
 
-    if ((RxHeader.Identifier == CAN::can_ids::CMD_VEL) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+    if ((RxHeader.Identifier == CAN::can_ids::CMD_VEL_FLOAT) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
     {
-    	CAN::CmdVel l_cmd_vel;
+    	CAN::CmdVelFloat l_cmd_vel;
         memcpy(&(l_cmd_vel.linear_x_m), RxData, sizeof(float));
         memcpy(&(l_cmd_vel.angular_z_rad), RxData + sizeof(float), sizeof(float));
 
         MotorBoard::getDCMotor().set_speed_order(metersToTicks(l_cmd_vel.linear_x_m), radsToTicks(-l_cmd_vel.angular_z_rad));
     }
 
+    if ((RxHeader.Identifier == CAN::can_ids::CMD_VEL) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+        {
+        	CAN::CmdVelFloat l_cmd_vel;
+
+            int32_t linear_x_µm_s = 0;
+            int32_t angular_z_µrad_s = 0;
+            linear_x_µm_s |= RxData[0] << 24;
+            linear_x_µm_s |= RxData[1] << 16;
+            linear_x_µm_s |= RxData[2] << 8;
+            linear_x_µm_s |= RxData[3] ;
+
+            angular_z_µrad_s |= RxData[4] << 24;
+            angular_z_µrad_s |= RxData[5] << 16;
+            angular_z_µrad_s |= RxData[6] << 8;
+            angular_z_µrad_s |= RxData[7] ;
+
+            l_cmd_vel.linear_x_m = linear_x_µm_s/(1000000.0f);
+            l_cmd_vel.angular_z_rad = angular_z_µrad_s/(1000000.0f);
+        	//@todo decode
+            //memcpy(&(l_cmd_vel.linear_x_m), RxData, sizeof(float));
+            //memcpy(&(l_cmd_vel.angular_z_rad), RxData + sizeof(float), sizeof(float));
+
+            MotorBoard::getDCMotor().set_speed_order(metersToTicks(l_cmd_vel.linear_x_m), radsToTicks(-l_cmd_vel.angular_z_rad));
+        }
+
     if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_CMD_INPUT) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
 	{
 		CAN::MotorBoardCmdInput l_cmd_inputs;
 
-		memcpy(&(l_cmd_inputs), RxData, 8*sizeof(uint8_t));
+		//memcpy(&(l_cmd_inputs), RxData, 8*sizeof(uint8_t));
+
+		l_cmd_inputs.enable_motors = RxData[0];
+		l_cmd_inputs.override_PWM = RxData[1];
+		l_cmd_inputs.PWM_override_left = RxData[3] | (RxData[2] << 8);
+		l_cmd_inputs.PWM_override_right = RxData[5] | (RxData[4] << 8);
+		l_cmd_inputs.reset_encoders = RxData[6];
 
 		motors_cmd_cb(l_cmd_inputs);
 	}
@@ -648,7 +719,10 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 	{
 		CAN::MotorBoardCurrentInput l_cmd_current_inputs;
 
-		memcpy(&(l_cmd_current_inputs), RxData, 8*sizeof(uint8_t));
+		//memcpy(&(l_cmd_current_inputs), RxData, 8*sizeof(uint8_t));
+		l_cmd_current_inputs.max_current_left_mA = RxData[1] | (RxData[0] << 8);
+		l_cmd_current_inputs.max_current_right_mA = RxData[3] | (RxData[2] << 8);
+		l_cmd_current_inputs.max_current_mA = RxData[5] | (RxData[4] << 8);
 
 		MotorBoard::getDCMotor().set_max_current(1000.0f*l_cmd_current_inputs.max_current_mA);
 		MotorBoard::getDCMotor().set_max_current(1000.0f*l_cmd_current_inputs.max_current_left_mA, 1000.0f*l_cmd_current_inputs.max_current_right_mA);
