@@ -606,8 +606,8 @@ void MotorBoard::update() {
 	}*/
 
 	TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED;
-    int32_t speedVx_µm_s = speedVx/1000000.f;   // 4 bytes
-    int32_t speedWz_mrad_s = speedWz/1000.F; // 4 bytes
+    int32_t speedVx_µm_s = speedVx * 1000000.f;   // 4 bytes
+    int32_t speedWz_mrad_s = speedWz * 1000.f; // 4 bytes
 
 	TxData[0] = (speedVx_µm_s >> 24) & 0xFF;
 	TxData[1] = (speedVx_µm_s >> 16) & 0xFF;
