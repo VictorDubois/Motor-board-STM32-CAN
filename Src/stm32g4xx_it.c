@@ -58,6 +58,8 @@
 extern DMA_HandleTypeDef hdma_adc2;
 extern ADC_HandleTypeDef hadc2;
 extern FDCAN_HandleTypeDef hfdcan1;
+extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim15;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -254,6 +256,21 @@ void FDCAN1_IT1_IRQHandler(void)
   /* USER CODE BEGIN FDCAN1_IT1_IRQn 1 */
 
   /* USER CODE END FDCAN1_IT1_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM1 break interrupt and TIM15 global interrupt.
+  */
+void TIM1_BRK_TIM15_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_BRK_TIM15_IRQn 0 */
+
+  /* USER CODE END TIM1_BRK_TIM15_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim1);
+  HAL_TIM_IRQHandler(&htim15);
+  /* USER CODE BEGIN TIM1_BRK_TIM15_IRQn 1 */
+
+  /* USER CODE END TIM1_BRK_TIM15_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

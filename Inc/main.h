@@ -61,10 +61,16 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define SPI_CS_Pin GPIO_PIN_10
 #define SPI_CS_GPIO_Port GPIOG
+#define ENC_B_1_Pin GPIO_PIN_0
+#define ENC_B_1_GPIO_Port GPIOA
+#define ENC_B_2_Pin GPIO_PIN_1
+#define ENC_B_2_GPIO_Port GPIOA
 #define USART2_TX_Pin GPIO_PIN_2
 #define USART2_TX_GPIO_Port GPIOA
 #define USART2_RX_Pin GPIO_PIN_3
 #define USART2_RX_GPIO_Port GPIOA
+#define PWM_A_Pin GPIO_PIN_4
+#define PWM_A_GPIO_Port GPIOA
 #define BRAKE_B_Pin GPIO_PIN_5
 #define BRAKE_B_GPIO_Port GPIOA
 #define CURRENT_A_Pin GPIO_PIN_6
@@ -73,6 +79,10 @@ void Error_Handler(void);
 #define CURRENT_B_GPIO_Port GPIOA
 #define BRAKE_Pin GPIO_PIN_0
 #define BRAKE_GPIO_Port GPIOB
+#define ENC_A_1_Pin GPIO_PIN_8
+#define ENC_A_1_GPIO_Port GPIOA
+#define ENC_A_2_Pin GPIO_PIN_9
+#define ENC_A_2_GPIO_Port GPIOA
 #define DIR_A_Pin GPIO_PIN_10
 #define DIR_A_GPIO_Port GPIOA
 #define T_SWDIO_Pin GPIO_PIN_13
@@ -81,6 +91,8 @@ void Error_Handler(void);
 #define T_SWCLK_GPIO_Port GPIOA
 #define T_SWO_Pin GPIO_PIN_3
 #define T_SWO_GPIO_Port GPIOB
+#define PWM_B_Pin GPIO_PIN_4
+#define PWM_B_GPIO_Port GPIOB
 #define DIR_B_Pin GPIO_PIN_5
 #define DIR_B_GPIO_Port GPIOB
 #define LD2_Pin GPIO_PIN_8
