@@ -9,14 +9,22 @@
 */
 
 // Mesures :
+// MCP3002
 // 105 <=> 360mA
 // 69 <=> 240mA
 // 53 <=> 186mA
 // 77 <=> 267mA
 // 89 <=> 301mA
 // 137 <=> 480mA
+
+// STM32 ADC
+// 20 <=> 200mA
 // "ONE_VOLT" factor = measure/("ONE_AMP" factor * real current)
+#ifdef USE_MCP3002
 #define ONE_VOLT        774//2048/5 // TODO find the actual value
+#else
+#define ONE_VOLT        265
+#endif
 #define ONE_AMP         (0.377*ONE_VOLT)
 
 #ifndef MCP3002_H_
