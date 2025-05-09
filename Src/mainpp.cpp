@@ -567,22 +567,37 @@ void MotorBoard::update() {
 	publish_odom_lighter(huart2);
 
 	/* Set the data to be transmitted */
-	TxHeader.Identifier = CAN::can_ids::ODOMETRY_LIGHT;
+	TxHeader.Identifier = CAN::can_ids::ODOMETRY_XY;
     int32_t poseX_mm = X * 1000;
     int32_t poseY_mm = Y * 1000;
-    int32_t angleRz_centi_deg = current_theta_rad * (100.0f * 180.f / M_PI);
 
-    TxData[0] = (poseX_mm >> 16) & 0xFF;
-    TxData[1] = (poseX_mm >> 8) & 0xFF;
-    TxData[2] = (poseX_mm) & 0xFF;
-    TxData[3] = (poseY_mm >>16) & 0xFF;
-    TxData[4] = (poseY_mm >> 8) & 0xFF;
-    TxData[5] = (poseY_mm) & 0xFF;
-    TxData[6] = (angleRz_centi_deg >> 8) & 0xFF;
-    TxData[7] = (angleRz_centi_deg) & 0xFF;
-	//memcpy(TxData, &(X), sizeof(float));
-	//memcpy(TxData + sizeof(float), &(Y), sizeof(float));
+    TxData[0] = (poseX_mm >> 24) & 0xFF;
+    TxData[1] = (poseX_mm >> 16) & 0xFF;
+    TxData[2] = (poseX_mm >> 8) & 0xFF;
+    TxData[3] = (poseX_mm) & 0xFF;
+    TxData[4] = (poseY_mm >>24) & 0xFF;
+    TxData[5] = (poseY_mm >> 16) & 0xFF;
+    TxData[6] = (poseY_mm >> 8) & 0xFF;
+    TxData[7] = (poseY_mm) & 0xFF;
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
+	{
+		/* Transmission request Error */
+		MotorBoard::getDCMotor().resetMotors();
+	}
+
+	TxHeader.Identifier = CAN::can_ids::ODOMETRY_THETA;
+    int32_t angleRz_centi_deg = current_theta_rad * (100.0f * 180.f / M_PI);
+    int16_t currentLeft  = motors.get_accumulated_current(M_L);
+    int16_t currentRight = motors.get_accumulated_current(M_R);
+    TxData[0] = (angleRz_centi_deg >> 24) & 0xFF;
+	TxData[1] = (angleRz_centi_deg >> 16) & 0xFF;
+	TxData[2] = (angleRz_centi_deg >> 8) & 0xFF;
+	TxData[3] = (angleRz_centi_deg) & 0xFF;
+	TxData[4] = (currentLeft >>8) & 0xFF;
+	TxData[5] = (currentLeft) & 0xFF;
+	TxData[6] = (currentRight >> 8) & 0xFF;
+	TxData[7] = (currentRight) & 0xFF;
+    if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
 		/* Transmission request Error */
 		MotorBoard::getDCMotor().resetMotors();
@@ -624,14 +639,14 @@ void MotorBoard::update() {
 		MotorBoard::getDCMotor().resetMotors();
 	}
 
-	TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED_FLOAT;
+	/*TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED_FLOAT;
 	memcpy(TxData, &(speedVx), sizeof(float));
 	memcpy(TxData+ sizeof(float), &(speedWz), sizeof(float));
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
-		/* Transmission request Error */
+		/* Transmission request Error *
 		MotorBoard::getDCMotor().resetMotors();
-	}
+	}*/
 
 
 	if (false && message_counter%100 == 0)
