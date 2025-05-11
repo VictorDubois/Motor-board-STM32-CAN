@@ -739,8 +739,8 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		l_cmd_current_inputs.max_current_right_mA = RxData[3] | (RxData[2] << 8);
 		l_cmd_current_inputs.max_current_mA = RxData[5] | (RxData[4] << 8);
 
-		MotorBoard::getDCMotor().set_max_current(1000.0f*l_cmd_current_inputs.max_current_mA);
-		MotorBoard::getDCMotor().set_max_current(1000.0f*l_cmd_current_inputs.max_current_left_mA, 1000.0f*l_cmd_current_inputs.max_current_right_mA);
+		MotorBoard::getDCMotor().set_max_current(l_cmd_current_inputs.max_current_mA/1000.0f);
+		MotorBoard::getDCMotor().set_max_current(l_cmd_current_inputs.max_current_left_mA/1000.0f, l_cmd_current_inputs.max_current_right_mA/1000.0f);
 	}
 
     if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_ENABLE) && (RxHeader.IdType == FDCAN_STANDARD_ID))
