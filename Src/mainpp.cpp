@@ -363,7 +363,7 @@ MotorBoard::MotorBoard(TIM_HandleTypeDef* a_motorTimHandler, UART_HandleTypeDef 
 
 	HAL_Delay(1);
 
-	motorsHardware = DCMotorHardware(TIM1, TIM2, a_motorTimHandler, TIM_CHANNEL_1, a_motorTimHandler, TIM_CHANNEL_2);
+	motorsHardware = DCMotorHardware(TIM2, TIM1, a_motorTimHandler, TIM_CHANNEL_2, a_motorTimHandler, TIM_CHANNEL_1);
 
 #ifdef USE_MCP3002
 	currentReader = MCP3002();
