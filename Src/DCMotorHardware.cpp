@@ -37,7 +37,7 @@ DCMotorHardware::~DCMotorHardware() {
 
 int16_t DCMotorHardware::getTicks(const uint32_t encoderId) {
 	if (encoderId == M_L) {
-		return encoder_left_timer->CNT;
+		return -encoder_left_timer->CNT;
 	}
 	return encoder_right_timer->CNT;
 }
