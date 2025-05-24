@@ -77,17 +77,13 @@ void DCMotorHardware::setPWM(const int32_t pwm_left, const int32_t pwm_right) {
 	command = MIN(command, DUTYMAX);
 	__HAL_TIM_SET_COMPARE(motor_right_timer, motor_right_timer_channel, command);
 
-	if(pwm_left == 0) {
-		HAL_GPIO_WritePin(BRAKE_B_GPIO_Port, BRAKE_Pin, GPIO_PIN_SET);//BRAKE
+	if(pwm_left == 0 && pwm_right == 0) {
+		HAL_GPIO_WritePin(BRAKE_B_GPIO_Port, BRAKE_B_Pin, GPIO_PIN_SET);//BRAKE
+		HAL_GPIO_WritePin(BRAKE_GPIO_Port, BRAKE_Pin, GPIO_PIN_SET);//BRAKE
 	}
 	else {
-		HAL_GPIO_WritePin(BRAKE_B_GPIO_Port, BRAKE_Pin, GPIO_PIN_RESET);//un-BRAKE
-	}
+		HAL_GPIO_WritePin(BRAKE_B_GPIO_Port, BRAKE_B_Pin, GPIO_PIN_RESET);//un-BRAKE
+		HAL_GPIO_WritePin(BRAKE_GPIO_Port, BRAKE_Pin, GPIO_PIN_RESET);//un-BRAKE
 
-	if(pwm_right == 0) {
-		HAL_GPIO_WritePin(BRAKE_GPIO_Port, BRAKE_B_Pin, GPIO_PIN_SET);//BRAKE
-	}
-	else {
-		HAL_GPIO_WritePin(BRAKE_GPIO_Port, BRAKE_B_Pin, GPIO_PIN_RESET);//un-BRAKE
 	}
 }
