@@ -297,42 +297,30 @@ void DCMotor::limitLinearFirst(int32_t& linear, int32_t& angular, const int32_t 
 
 
 void DCMotor::control_ramp_speed_polar(void) {
-	// Ziegler Nichols: Ku = 0.1, Tu = 0.0844
-	//float linear_Ku = 0.063f;//0.085f;//0.1;
-	//float linear_Tu = 0.08238f;//0.0844;
+	float linear_Ku = 0.018f;
+	float linear_Tu = 0.103448276f;
+	float linear_pid_p =linear_Ku * 0.45f;
+	//linear_pid_p *=0.9f;
+	float linear_pid_i = linear_Ku * 0.54f/linear_Tu;
+	float linear_pid_d = 0*linear_Ku*linear_Tu;
 
-	float linear_Ku = 0.0115f;//0.02f;//0.012f;
-	//linear_Ku = 0.05f;
-	float linear_Tu = 0.08242f;
-	//linear_Tu = 0.05f;
-	float linear_pid_p =linear_Ku * 0.45f;//0.06f;//0.38;//0.5 => explose. 0.1, 0.2 => marche.0.35, 0.38 => marche avec légère oscillation.0.4 oscille
-	linear_pid_p *=0.8f;
-	float linear_pid_i = linear_Ku * 0.54f/linear_Tu;//1.421800948f;
-	float linear_pid_d = 0.0f*linear_Ku*linear_Tu;//0.000633f;
+	linear_pid_p = linear_Ku * 0.6f;
+	linear_pid_i = linear_Ku * 1.2f/linear_Tu;
+	linear_pid_d = 0.075*linear_Ku*linear_Tu;
 
-	//float linear_pid_p = 0.6f*linear_Ku;//0.06f;//0.38;//0.5 => explose. 0.1, 0.2 => marche.0.35, 0.38 => marche avec légère oscillation.0.4 oscille
-	//float linear_pid_i = 1.2f*linear_Ku/linear_Tu;//1.421800948f;
-	//float linear_pid_d = 0.075f*linear_Ku*linear_Tu;//0.000633f;
-
-	/*linear_pid_p = 0.0115f;//0.062f;//0.067f;//0.07//0.035/0.085f;//0.06f;//0.38;//0.5 => explose. 0.1, 0.2 => marche.0.35, 0.38 => marche avec légère oscillation.0.4 oscilleu
-	linear_pid_i = 0;//1.421800948f;
+	/*linear_pid_p = 0.016f;
+	linear_pid_i = 0;
 	linear_pid_d = 0;*/
 
-
-	// Ziegler Nichols: Ku = 0.15, Tu = 0.10855
-	//0.1 => oscille beaucoup mais lin actif. 0.01 => ne bouge pas 0.03 lent. 0.09 marche, oscill un peu. 0.15 marche bien :)
-	/*float angular_pid_p = 0.09f;
-	float angular_pid_i = 1.105481345f;
-	float angular_pid_d = 0.000814125f;*/
-
-	float angular_Ku = 0.0056f;//0.075f;
-	float angular_Tu = 0.065757576f;//0.122f;
+	float angular_Ku = 0.0140625f;
+	float angular_Tu = 0.131058824f;
 	float angular_pid_p = angular_Ku * 0.45f ;
-	angular_pid_p *=0.8f;
+	//angular_pid_p *=0.8f;
 	float angular_pid_i = angular_Ku * 0.64f/angular_Tu;
 	float angular_pid_d = 0.0f*angular_Ku*angular_Tu;
 
-	/*angular_pid_p = 0;//0.0056;//>0.0065//0.008;//0.085f;
+
+	/*angular_pid_p = 0;
 	angular_pid_i = 0;
 	angular_pid_d = 0;*/
 
