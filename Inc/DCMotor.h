@@ -45,10 +45,10 @@ public:
 
 	/**
 	 * @brief Sets the target linear and rotational speeds
-	 * @param lin target linear speed, in m/s
-	 * @param rot target rotational speed, in rad/s
+	 * @param lin target linear speed, in ticks/s
+	 * @param rot target rotational speed, in ticks/s
 	 */
-	void set_speed_order(float lin, float rot);
+	void set_speed_order(int32_t lin, int32_t rot);
 
 	/**
 	 * Runs the main loop
@@ -215,6 +215,8 @@ private:
 	float angular_speed_integ_error;
 
 	volatile int32_t last_update_time;
+
+	volatile uint32_t limitLinFirstWasUsed = 0;
 };
 
 

@@ -17,12 +17,15 @@
 #endif
 
 #ifdef KV2
-#define TICKS_PER_REVOLUTION 8192.0 	// Nb ticks per wheel revolution
-#define WHEEL_RADIUS 19.91              // Diameter of the wheel (mm) UNUSED !!!
-#define DIST_PER_REVOLUTION_THEORY WHEEL_RADIUS*M_PI // Distance traveled for a fulli wheel revolution (in mm)
-#define DIST_PER_REVOLUTION DIST_PER_REVOLUTION_THEORY/1.2471814155578613 // Distance traveled for a full wheel revolution (in mm)
-#define VOIE 205.10
-#define TICKS_PER_DEG VOIE * 0.96007158213* TICKS_PER_REVOLUTION/(DIST_PER_REVOLUTION_THEORY*360.0) // Nb of diff tick (enc1 - enc2) it takes to rotate 1 deg (old value: 4.7)
+constexpr float TICKS_PER_WHEEL_REVOLUTION = 8192.0; 	// Nb ticks per wheel revolution
+constexpr float WHEEL_RADIUS_MM = 19.91;              // Diameter of the wheel (mm) UNUSED !!!
+constexpr float DIST_MM_PER_WHEEL_REVOLUTION_THEORY = (WHEEL_RADIUS_MM*2*M_PI); // Distance traveled for a full wheel revolution (in mm)
+constexpr float DIST_MM_PER_WHEEL_REVOLUTION = (DIST_MM_PER_WHEEL_REVOLUTION_THEORY);///2.494362831); // Distance traveled for a full wheel revolution (in mm)
+constexpr float VOIE_MM = 205.10;
+constexpr float DIST_PER_ROBOT_REVOLUTION_THEORY = (VOIE_MM * M_PI);
+constexpr float TICKS_PER_ROBOT_REVOLUTION_THEORY = ((DIST_PER_ROBOT_REVOLUTION_THEORY * TICKS_PER_WHEEL_REVOLUTION)/(DIST_MM_PER_WHEEL_REVOLUTION_THEORY));
+constexpr float TICKS_PER_ROBOT_DEG_THEORY = (TICKS_PER_ROBOT_REVOLUTION_THEORY/360.0); // Nb of diff tick (enc1 - enc2) it takes to rotate 1 deg
+constexpr float TICKS_PER_ROBOT_DEG = TICKS_PER_ROBOT_DEG_THEORY;//* 0.96007158213; // Nb of diff tick (enc1 - enc2) it takes to rotate 1 deg
 #endif
 
 #define TICKS_OVERFLOW 65536.0

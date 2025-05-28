@@ -272,7 +272,7 @@ int32_t DCMotor::get_current(uint8_t motor_id) {
 	return current[motor_id];
 }
 
-void DCMotor::set_speed_order(float lin, float rot) {
+void DCMotor::set_speed_order(int32_t lin, int32_t rot) {
 	/*constexpr int32_t meters_to_tick = 4096/(M_PI * 0.068);
 	constexpr int32_t rad_to_tick = meters_to_tick*(0.25 /2);*/
 
@@ -280,6 +280,11 @@ void DCMotor::set_speed_order(float lin, float rot) {
 	angular_speed_order = rot;//rad_to_tick * rot;// = radius when turning on the spot (=half entraxe) / speed in m/s = (250mm/2) * 19172 to convert from rad/s => 2396
 
 	limitLinearFirst(linear_speed_order, angular_speed_order, max_speed);
+
+	if (linear_speed_order != lin || angular_speed_order!=rot)
+	{
+		limitLinFirstWasUsed++;
+	}
 
 	speed_order[M_L] = linear_speed_order + angular_speed_order;
 	speed_order[M_R] = linear_speed_order - angular_speed_order;

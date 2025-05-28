@@ -403,7 +403,7 @@ float get_orientation_float(int32_t encoder1, int32_t encoder2, float offset)
 
 constexpr float ticksToMillimeters(int32_t ticks)
 {
-	return (DIST_PER_REVOLUTION * (float)ticks / TICKS_PER_REVOLUTION);
+	return (DIST_MM_PER_WHEEL_REVOLUTION * (float)ticks / TICKS_PER_WHEEL_REVOLUTION);
 }
 
 constexpr float ticksToMeters(int32_t ticks)
@@ -414,7 +414,7 @@ constexpr float ticksToMeters(int32_t ticks)
 
 constexpr int32_t millimetersToTicks(float millimeters)
 {
-	return static_cast<int32_t>(millimeters * TICKS_PER_REVOLUTION/DIST_PER_REVOLUTION);
+	return static_cast<int32_t>(millimeters * TICKS_PER_WHEEL_REVOLUTION/DIST_MM_PER_WHEEL_REVOLUTION);
 }
 
 constexpr int32_t metersToTicks(float meters)
@@ -426,7 +426,7 @@ constexpr int32_t metersToTicks(float meters)
 
 constexpr int32_t degreesToTicks(float degrees)
 {
-	return degrees * TICKS_PER_DEG;
+	return degrees * TICKS_PER_ROBOT_DEG;
 }
 constexpr int32_t radsToTicks(float rads)
 {
@@ -435,7 +435,7 @@ constexpr int32_t radsToTicks(float rads)
 
 constexpr float ticksToDegrees(int32_t ticks)
 {
-	return ticks/TICKS_PER_DEG;
+	return ticks/TICKS_PER_ROBOT_DEG;
 }
 
 constexpr float ticksToRads(int32_t ticks)
@@ -556,8 +556,12 @@ void MotorBoard::update() {
 	odom_lighter_msg.speedVx = (float)test_message_received;//ticksToMillimeters((left_speed+right_speed)/2)/1000.f;
 	odom_lighter_msg.speedWz = encoder_left;//((right_speed - left_speed)/TICKS_PER_DEG)*M_PI/180; // rad/s*/
 
-	float speedVx = ticksToMeters((left_speed+right_speed)/2);
-	float speedWz = ticksToRads(right_speed - left_speed); // rad/s
+
+	float speedVx = ticksToMeters(left_speed + right_speed)/2;
+	float speedWz = ticksToRads(right_speed - left_speed)/2; // rad/s
+
+	speedVx = motors.get_linear_speed_order(); // debug
+	speedWz = motors.get_angular_speed_order(); // debug
 
 	odom_lighter_msg.poseX = X;
 	odom_lighter_msg.poseY = Y;
@@ -707,8 +711,12 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
             angular_z_µrad_s |= RxData[6] << 8;
             angular_z_µrad_s |= RxData[7] ;
 
+            //l_cmd_vel.linear_x_m = linear_x_µm_s/(10000000.0f); // before fix
+            //l_cmd_vel.angular_z_rad = angular_z_µrad_s/(10000000.0f); // before fix
             l_cmd_vel.linear_x_m = linear_x_µm_s/(1000000.0f);
             l_cmd_vel.angular_z_rad = angular_z_µrad_s/(1000000.0f);
+
+            //l_cmd_vel.angular_z_rad /= 2.4;// Magic factor :'(
         	//@todo decode
             //memcpy(&(l_cmd_vel.linear_x_m), RxData, sizeof(float));
             //memcpy(&(l_cmd_vel.angular_z_rad), RxData + sizeof(float), sizeof(float));
