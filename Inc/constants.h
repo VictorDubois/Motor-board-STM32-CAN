@@ -17,7 +17,7 @@
 #endif
 
 #ifdef KV2
-constexpr float TICKS_PER_WHEEL_REVOLUTION = 8192.0; 	// Nb ticks per wheel revolution
+constexpr float TICKS_PER_WHEEL_REVOLUTION = 20480.0; 	// Nb ticks per wheel revolution
 constexpr float WHEEL_RADIUS_MM = 19.91;              // Diameter of the wheel (mm) UNUSED !!!
 constexpr float DIST_MM_PER_WHEEL_REVOLUTION_THEORY = (WHEEL_RADIUS_MM*2*M_PI); // Distance traveled for a full wheel revolution (in mm)
 constexpr float DIST_MM_PER_WHEEL_REVOLUTION = (DIST_MM_PER_WHEEL_REVOLUTION_THEORY);///2.494362831); // Distance traveled for a full wheel revolution (in mm)
