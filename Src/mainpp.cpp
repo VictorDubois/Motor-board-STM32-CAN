@@ -393,7 +393,7 @@ float get_orientation_float(int32_t encoder1, int32_t encoder2, float offset)
 {
 
 
-    float absolute_orientation = fmod(ticksToDegrees(encoder2 - encoder1) + offset, 360);
+    float absolute_orientation = fmod(ticksToDegrees((encoder2 - encoder1)/2) + offset, 360);
 
     if (absolute_orientation >= 0)
         return (absolute_orientation);
@@ -559,9 +559,6 @@ void MotorBoard::update() {
 
 	float speedVx = ticksToMeters(left_speed + right_speed)/2;
 	float speedWz = ticksToRads(right_speed - left_speed)/2; // rad/s
-
-	speedVx = motors.get_linear_speed_order(); // debug
-	speedWz = motors.get_angular_speed_order(); // debug
 
 	odom_lighter_msg.poseX = X;
 	odom_lighter_msg.poseY = Y;
