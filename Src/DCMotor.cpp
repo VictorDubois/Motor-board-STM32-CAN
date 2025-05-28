@@ -302,6 +302,8 @@ void DCMotor::limitLinearFirst(int32_t& linear, int32_t& angular, const int32_t 
 
 
 void DCMotor::control_ramp_speed_polar(void) {
+	// **** Linear ****
+	// Ziegler Nichols
 	float linear_Ku = 0.018f;
 	float linear_Tu = 0.103448276f;
 	float linear_pid_p =linear_Ku * 0.45f;
@@ -313,21 +315,29 @@ void DCMotor::control_ramp_speed_polar(void) {
 	linear_pid_i = linear_Ku * 1.2f/linear_Tu;
 	linear_pid_d = 0.075*linear_Ku*linear_Tu;
 
-	/*linear_pid_p = 0.016f;
-	linear_pid_i = 0;
-	linear_pid_d = 0;*/
+	// Manual calibration, based on https://tlk-energy.de/blog-en/practical-pid-tuning-guide
+	linear_pid_p = 0.0032;//0.016f;
+	float Ti_lin_manu = 0.075;
+	linear_pid_i = linear_pid_p/Ti_lin_manu;
+	linear_pid_d = 0;
 
-	float angular_Ku = 0.0140625f;
-	float angular_Tu = 0.131058824f;
+
+	// **** Angular ****
+	// Ziegler Nichols
+	float angular_Ku = 0.03f;
+	float angular_Tu = 0.101111111f;
 	float angular_pid_p = angular_Ku * 0.45f ;
 	//angular_pid_p *=0.8f;
 	float angular_pid_i = angular_Ku * 0.64f/angular_Tu;
 	float angular_pid_d = 0.0f*angular_Ku*angular_Tu;
 
+	// Manual calibration, based on https://tlk-energy.de/blog-en/practical-pid-tuning-guide
+	angular_pid_p = 0.007;//0.004
+	float Ti_manu = 0.26; //maybe 0.27 or 0.28 is better
+	angular_pid_i = angular_pid_p/Ti_manu;
+	angular_pid_d = 0;
 
-	/*angular_pid_p = 0;
-	angular_pid_i = 0;
-	angular_pid_d = 0;*/
+
 
 	int32_t linear_speed_error = linear_speed_order - linear_speed;
 	int32_t angular_speed_error = angular_speed_order - angular_speed;
@@ -361,7 +371,7 @@ void DCMotor::control_ramp_speed_polar(void) {
 	angular_last_speed_error = angular_speed_error;
 
 
-	voltage[M_L] = linear_voltage + angular_voltage;
+	voltage[M_L] = linear_voltage + angular_voltage;//@todo check this
 	voltage[M_R] = linear_voltage - angular_voltage;
 
 	for(int i = 0; i < NB_MOTORS; i++){
