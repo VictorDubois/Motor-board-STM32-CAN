@@ -201,13 +201,22 @@ void DCMotor::update() {
 
 	overCurrentProtection();
 
-	if (stopped_timeout > hardware->getMilliSecondsElapsed()) {
+	auto l_remaining_time_stopped = stopped_timeout - hardware->getMilliSecondsElapsed();
+
+	if (l_remaining_time_stopped > 0) {
+		m_remaining_time_stopped[0] = l_remaining_time_stopped;
+		m_remaining_time_stopped[1] = l_remaining_time_stopped;
 		resetMotors();
 		return;
 	}
+	m_remaining_time_stopped[0] = 0;
+	m_remaining_time_stopped[1] = 0;
+
 
 	for(int i = 0; i < NB_MOTORS; i++){
-		if (stopped_timeouts[i] > hardware->getMilliSecondsElapsed()){
+		l_remaining_time_stopped = stopped_timeouts[i] - hardware->getMilliSecondsElapsed();
+		if (l_remaining_time_stopped > 0){
+			m_remaining_time_stopped[i] = l_remaining_time_stopped;
 			resetMotor(i);
 			override_pwms[i] = 0;
 		}
@@ -255,6 +264,10 @@ float DCMotor::get_linear_error_integ() {
 
 int32_t DCMotor::get_speed(uint8_t motor_id) {
 	return speed[motor_id];
+}
+
+uint32_t DCMotor::get_remaining_time_stopped(uint8_t motor_id) {
+	return m_remaining_time_stopped[motor_id];
 }
 
 int16_t DCMotor::get_encoder_ticks(uint8_t encoder_id) {

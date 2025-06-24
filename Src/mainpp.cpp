@@ -586,6 +586,24 @@ void MotorBoard::update() {
 		MotorBoard::getDCMotor().resetMotors();
 	}
 
+	TxHeader.Identifier = CAN::can_ids::ODOMETRY_XYum;
+	int32_t poseX_um = X * 1000000;
+	int32_t poseY_um = Y * 1000000;
+
+	TxData[0] = (poseX_um >> 24) & 0xFF;
+	TxData[1] = (poseX_um >> 16) & 0xFF;
+	TxData[2] = (poseX_um >> 8) & 0xFF;
+	TxData[3] = (poseX_um) & 0xFF;
+	TxData[4] = (poseY_um >>24) & 0xFF;
+	TxData[5] = (poseY_um >> 16) & 0xFF;
+	TxData[6] = (poseY_um >> 8) & 0xFF;
+	TxData[7] = (poseY_um) & 0xFF;
+	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
+	{
+		/* Transmission request Error */
+		MotorBoard::getDCMotor().resetMotors();
+	}
+
 	TxHeader.Identifier = CAN::can_ids::ODOMETRY_THETA;
     int32_t angleRz_centi_deg = current_theta_rad * (100.0f * 180.f / M_PI);
     int16_t currentLeft  = motors.get_accumulated_current(M_L);
@@ -639,6 +657,28 @@ void MotorBoard::update() {
 		/* Transmission request Error */
 		MotorBoard::getDCMotor().resetMotors();
 	}
+
+	TxHeader.Identifier = CAN::can_ids::CURRENT_LIMIT;
+	uint16_t left_current_mA = motors.get_accumulated_current(M_L) /ONE_AMP; // 2 bytes
+	uint16_t right_current_mA = motors.get_accumulated_current(M_R) /ONE_AMP; // 2 bytes
+	uint16_t left_wheel_unstalled_in_ms = motors.get_remaining_time_stopped(M_L); // 2 bytes Nb of ms until the robot's left wheel is allowed to move again
+	uint16_t right_wheel_unstalled_in_ms = motors.get_remaining_time_stopped(M_R);
+
+	TxData[0] = (left_current_mA >> 8) & 0xFF;
+	TxData[1] = (left_current_mA ) & 0xFF;
+	TxData[2] = (right_current_mA >> 8) & 0xFF;
+	TxData[3] = (right_current_mA ) & 0xFF;
+	TxData[4] = (left_wheel_unstalled_in_ms >> 8) & 0xFF;
+	TxData[5] = (left_wheel_unstalled_in_ms ) & 0xFF;
+	TxData[6] = (right_wheel_unstalled_in_ms >> 8) & 0xFF;
+	TxData[7] = (right_wheel_unstalled_in_ms) & 0xFF;
+
+	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
+	{
+		/* Transmission request Error */
+		MotorBoard::getDCMotor().resetMotors();
+	}
+
 
 	/*TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED_FLOAT;
 	memcpy(TxData, &(speedVx), sizeof(float));

@@ -100,6 +100,8 @@ public:
 
 	int32_t get_voltage(int8_t a_motor_id);
 
+	uint32_t get_remaining_time_stopped(uint8_t motor_id);
+
 	/**
 	 * @brief setter for the max speed (per motor)
 	 * @param a_max_speed the new max speed, in tick/s
@@ -184,6 +186,8 @@ private:
 
 	volatile uint32_t stopped_timeout;
 	volatile uint32_t stopped_timeouts[NB_MOTORS];
+
+	volatile uint32_t m_remaining_time_stopped[NB_MOTORS];
 
 	int32_t refined_speed_order[NB_MOTORS];
 	int32_t last_encoder_value[NB_MOTORS];
