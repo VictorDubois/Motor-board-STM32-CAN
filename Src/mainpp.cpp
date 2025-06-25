@@ -568,7 +568,7 @@ void MotorBoard::update() {
 	publish_odom_lighter(huart2);
 
 	/* Set the data to be transmitted */
-	TxHeader.Identifier = CAN::can_ids::ODOMETRY_XY;
+	/*TxHeader.Identifier = CAN::can_ids::ODOMETRY_XY;
     int32_t poseX_mm = X * 1000;
     int32_t poseY_mm = Y * 1000;
 
@@ -582,9 +582,9 @@ void MotorBoard::update() {
     TxData[7] = (poseY_mm) & 0xFF;
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
-		/* Transmission request Error */
+		// Transmission request Error
 		MotorBoard::getDCMotor().resetMotors();
-	}
+	}*/
 
 	TxHeader.Identifier = CAN::can_ids::ODOMETRY_XYum;
 	int32_t poseX_um = X * 1000000;
