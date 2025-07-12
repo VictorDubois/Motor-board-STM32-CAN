@@ -201,7 +201,7 @@ void DCMotor::update() {
 
 	overCurrentProtection();
 
-	auto l_remaining_time_stopped = stopped_timeout - hardware->getMilliSecondsElapsed();
+	int32_t l_remaining_time_stopped = stopped_timeout - hardware->getMilliSecondsElapsed();
 
 	if (l_remaining_time_stopped > 0) {
 		m_remaining_time_stopped[0] = l_remaining_time_stopped;
