@@ -676,7 +676,7 @@ void MotorBoard::update() {
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
 		/* Transmission request Error */
-		MotorBoard::getDCMotor().resetMotors();
+		//MotorBoard::getDCMotor().resetMotors();
 	}
 
 
