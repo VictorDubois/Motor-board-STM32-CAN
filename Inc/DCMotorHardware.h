@@ -27,7 +27,8 @@ public:
 			TIM_HandleTypeDef* motor_right_timer,
 			const int32_t motor_right_timer_channel,
 			TIM_HandleTypeDef* motor_left_timer,
-			const int32_t motor_left_timer_channel);
+			const int32_t motor_left_timer_channel,
+			FDCAN_HandleTypeDef* hcan);
 	~DCMotorHardware();
 
 	void resetEncodersCounter();
@@ -58,6 +59,7 @@ private:
 	int32_t motor_right_timer_channel;
 	TIM_HandleTypeDef* motor_left_timer;
 	int32_t motor_left_timer_channel;
+	FDCAN_HandleTypeDef* hcan;
 };
 
 

@@ -6,6 +6,7 @@
  */
 
 #include "DCMotorHardware.h"
+#include "CanStruct/can_structs.h"
 extern "C" {
 	#include "main.h" // Include pin definitions
 }
@@ -14,7 +15,9 @@ DCMotorHardware::DCMotorHardware(TIM_TypeDef* a_encoder_right_timer,
 		TIM_HandleTypeDef* a_motor_right_timer,
 		const int32_t a_motor_right_timer_channel,
 		TIM_HandleTypeDef* a_motor_left_timer,
-		const int32_t a_motor_left_timer_channel) {
+		const int32_t a_motor_left_timer_channel,
+		FDCAN_HandleTypeDef* a_hcan)
+	:hcan(a_hcan){
 	dir_right_gpio_bank = DIR_B_GPIO_Port;
 	dir_right_gpio = DIR_B_Pin;
 	dir_left_gpio_bank = DIR_A_GPIO_Port;
@@ -52,6 +55,39 @@ uint32_t DCMotorHardware::getMilliSecondsElapsed() {
 }
 
 void DCMotorHardware::setPWM(const int32_t pwm_left, const int32_t pwm_right) {
+	// CAN
+	FDCAN_TxHeaderTypeDef TxHeader;
+	uint8_t TxData[8];
+
+	/* Prepare Tx Header */
+	TxHeader.Identifier = 0x321;
+	TxHeader.IdType = FDCAN_STANDARD_ID;
+	TxHeader.TxFrameType = FDCAN_DATA_FRAME;
+	TxHeader.DataLength = FDCAN_DLC_BYTES_8;
+	TxHeader.ErrorStateIndicator = FDCAN_ESI_PASSIVE;
+	TxHeader.BitRateSwitch = FDCAN_BRS_OFF;
+	TxHeader.FDFormat = FDCAN_CLASSIC_CAN;
+	TxHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+	TxHeader.MessageMarker = 0;
+
+	TxHeader.Identifier = CAN::can_ids::C620_CURRENT_COMMAND;
+
+	TxData[0] = (pwm_right >> 8) & 0xFF;
+	TxData[1] = (pwm_right) & 0xFF;
+	TxData[2] = (pwm_left >> 8) & 0xFF;
+	TxData[3] = (pwm_left) & 0xFF;
+	TxData[4] = 0 & 0xFF;
+	TxData[5] = 0 & 0xFF;
+	TxData[6] = 0 & 0xFF;
+	TxData[7] = 0 & 0xFF;
+	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
+	{
+		/* Transmission request Error */
+		//MotorBoard::getDCMotor().resetMotors();
+	}
+
+	// PWM
+
 	// Write dir according to pwm sign
 	if (pwm_left > 0) {
 		HAL_GPIO_WritePin(dir_left_gpio_bank, dir_left_gpio, GPIO_PIN_SET);

@@ -363,7 +363,7 @@ MotorBoard::MotorBoard(TIM_HandleTypeDef* a_motorTimHandler, UART_HandleTypeDef 
 
 	HAL_Delay(1);
 
-	motorsHardware = DCMotorHardware(TIM2, TIM1, a_motorTimHandler, TIM_CHANNEL_2, a_motorTimHandler, TIM_CHANNEL_1);
+	motorsHardware = DCMotorHardware(TIM2, TIM1, a_motorTimHandler, TIM_CHANNEL_2, a_motorTimHandler, TIM_CHANNEL_1, hcan);
 
 #ifdef USE_MCP3002
 	currentReader = MCP3002();
@@ -685,7 +685,7 @@ void MotorBoard::update() {
 	memcpy(TxData+ sizeof(float), &(speedWz), sizeof(float));
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
-		/* Transmission request Error *
+		// Transmission request Error
 		MotorBoard::getDCMotor().resetMotors();
 	}*/
 
