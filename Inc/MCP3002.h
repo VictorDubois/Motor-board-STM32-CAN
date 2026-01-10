@@ -31,6 +31,7 @@
 #define MCP3002_H_
 #include "stm32g4xx_hal.h"
 #define CURRENT_READER_OFFLINE 2048
+//#define USE_C620_CURRENT true
 
 class MCP3002
 {
@@ -41,9 +42,28 @@ class MCP3002
   private:
     ADC_HandleTypeDef* m_hadc2;
 #endif
+
+#ifdef USE_C620_CURRENT
+    int16_t m_current_left = 0;
+    int16_t m_current_right = 0;
+#endif
   public:
     int readADC(int adcnum);
     int readCurrent(int adcnum);
+#ifdef USE_C620_CURRENT
+    void setCurrent(int adcnum, int16_t a_current)
+    {
+    	if (adcnum)
+    	{
+    		m_current_left = a_current;
+    	}
+    	else
+    	{
+    		m_current_right = a_current;
+    	}
+    }
+;
+#endif
   private:
     GPIO_TypeDef* m_miso_gpio_bank;
 	uint16_t m_miso_gpio;

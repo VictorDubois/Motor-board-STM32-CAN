@@ -29,6 +29,8 @@ uint8_t RxData[8];
 FDCAN_TxHeaderTypeDef TxHeader;
 uint8_t TxData[8];
 
+const float l_motor_wheel_diameter_m = 0.06;
+
 
 float get_float(const uint8_t* a_string, const int a_beginning)
 {
@@ -731,6 +733,54 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 
         MotorBoard::getDCMotor().set_speed_order(metersToTicks(l_cmd_vel.linear_x_m), radsToTicks(-l_cmd_vel.angular_z_rad));
     }
+
+    if ((RxHeader.Identifier == CAN::can_ids::C620_OUTPUT_1) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+	{
+		uint16_t l_mechanical_angle_8192_ticks = 0;
+		int16_t l_speed_rpm = 0;
+		int16_t l_torque = 0;
+
+		l_mechanical_angle_8192_ticks |= RxData[0] << 8;
+		l_mechanical_angle_8192_ticks |= RxData[1];
+		l_speed_rpm |= RxData[2] << 8;
+		l_speed_rpm |= RxData[3] ;
+		l_torque |= RxData[4] << 8;
+		l_torque |= RxData[5] ;
+
+		float l_speed_meter_s = l_speed_rpm * l_motor_wheel_diameter_m * M_PI/60.0;
+
+#ifdef USE_CAN_SPEED_ODOMETRY
+		MotorBoard::getDCMotor().set_speed(1, metersToTicks(l_speed_meter_s));
+#endif
+
+#ifdef USE_C620_CURRENT
+		MotorBoard::getDCMotor().set_current(1, l_torque);
+#endif
+	}
+
+    if ((RxHeader.Identifier == CAN::can_ids::C620_OUTPUT_2) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+	{
+		uint16_t l_mechanical_angle_8192_ticks = 0;
+		int16_t l_speed_rpm = 0;
+		int16_t l_torque = 0;
+
+		l_mechanical_angle_8192_ticks |= RxData[0] << 8;
+		l_mechanical_angle_8192_ticks |= RxData[1];
+		l_speed_rpm |= RxData[2] << 8;
+		l_speed_rpm |= RxData[3] ;
+		l_torque |= RxData[4] << 8;
+		l_torque |= RxData[5] ;
+
+		float l_speed_meter_s = l_speed_rpm * l_motor_wheel_diameter_m * M_PI/60.0;
+
+#ifdef USE_CAN_SPEED_ODOMETRY
+		MotorBoard::getDCMotor().set_speed(2, metersToTicks(l_speed_meter_s));
+#endif
+
+#ifdef USE_C620_CURRENT
+		MotorBoard::getDCMotor().set_current(2, l_torque);
+#endif
+	}
 
     if ((RxHeader.Identifier == CAN::can_ids::CMD_VEL) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
         {

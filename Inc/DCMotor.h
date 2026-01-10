@@ -8,6 +8,8 @@
 #ifndef DCMOTOR_H_
 #define DCMOTOR_H_
 
+//#define USE_CAN_ODOMETRY true
+
 #include "DCMotorHardware.h"
 #include "MCP3002.h"
 #include "stm32g4xx_hal.h"
@@ -153,6 +155,10 @@ public:
 	int32_t get_angular_speed_order() {return angular_speed_order;}
 
 	void resetEncodersCounter();
+
+	void set_speed(int MOTOR_ID, int32_t a_new_speed);
+
+	void set_current(int MOTOR_ID, int16_t a_new_current);
 
 private:
 	float dt;

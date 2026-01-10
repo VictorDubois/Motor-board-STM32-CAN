@@ -238,7 +238,21 @@ void DCMotor::update() {
 	}
 }
 
+void DCMotor::set_speed(int MOTOR_ID, int32_t a_new_speed)
+{
+	speed[MOTOR_ID] = a_new_speed;
+}
+
+void DCMotor::set_current(int MOTOR_ID, int16_t a_new_current)
+{
+#ifdef USE_C620_CURRENT
+	current_reader->setCurrent(MOTOR_ID, a_new_current);
+#endif
+}
+
+
 void DCMotor::get_speed(){
+#ifndef USE_CAN_SPEED_ODOMETRY
     int32_t current_speed = 0;
 
     for(int i = 0; i < NB_MOTORS; i++){
@@ -249,6 +263,7 @@ void DCMotor::get_speed(){
 
         speed[i] = current_speed * SAMPLING_PER_SEC;// ticks per second
     }
+#endif
 
     linear_speed = get_linear(speed);
     angular_speed = get_angular(speed);
