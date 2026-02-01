@@ -30,12 +30,12 @@ DCMotorHardware::DCMotorHardware(TIM_TypeDef* a_encoder_right_timer,
 	motor_left_timer_channel = a_motor_left_timer_channel;
 
 	HAL_GPIO_WritePin(BRAKE_GPIO_Port, BRAKE_Pin, GPIO_PIN_RESET);//BRAKE
-	HAL_GPIO_WritePin(BRAKE_B_GPIO_Port, BRAKE_Pin, GPIO_PIN_RESET);//BRAKE
+	//HAL_GPIO_WritePin(BRAKE_B_GPIO_Port, BRAKE_Pin, GPIO_PIN_RESET);//BRAKE
 }
 DCMotorHardware::DCMotorHardware() {}
 DCMotorHardware::~DCMotorHardware() {
 	HAL_GPIO_WritePin(BRAKE_GPIO_Port, BRAKE_Pin, GPIO_PIN_RESET);//BRAKE
-	HAL_GPIO_WritePin(BRAKE_B_GPIO_Port, BRAKE_Pin, GPIO_PIN_RESET);//BRAKE
+	//HAL_GPIO_WritePin(BRAKE_B_GPIO_Port, BRAKE_Pin, GPIO_PIN_RESET);//BRAKE
 }
 
 int16_t DCMotorHardware::getTicks(const uint32_t encoderId) {
@@ -114,11 +114,11 @@ void DCMotorHardware::setPWM(const int32_t pwm_left, const int32_t pwm_right) {
 	__HAL_TIM_SET_COMPARE(motor_right_timer, motor_right_timer_channel, command);
 
 	if(pwm_left == 0 && pwm_right == 0) {
-		HAL_GPIO_WritePin(BRAKE_B_GPIO_Port, BRAKE_B_Pin, GPIO_PIN_SET);//BRAKE
+		//HAL_GPIO_WritePin(BRAKE_B_GPIO_Port, BRAKE_B_Pin, GPIO_PIN_SET);//BRAKE
 		HAL_GPIO_WritePin(BRAKE_GPIO_Port, BRAKE_Pin, GPIO_PIN_SET);//BRAKE
 	}
 	else {
-		HAL_GPIO_WritePin(BRAKE_B_GPIO_Port, BRAKE_B_Pin, GPIO_PIN_RESET);//un-BRAKE
+		//HAL_GPIO_WritePin(BRAKE_B_GPIO_Port, BRAKE_B_Pin, GPIO_PIN_RESET);//un-BRAKE
 		HAL_GPIO_WritePin(BRAKE_GPIO_Port, BRAKE_Pin, GPIO_PIN_RESET);//un-BRAKE
 
 	}

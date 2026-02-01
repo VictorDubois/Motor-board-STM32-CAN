@@ -59,8 +59,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define SPI_CS_Pin GPIO_PIN_10
-#define SPI_CS_GPIO_Port GPIOG
+#define NRST_Pin GPIO_PIN_10
+#define NRST_GPIO_Port GPIOG
 #define ENC_B_1_Pin GPIO_PIN_0
 #define ENC_B_1_GPIO_Port GPIOA
 #define ENC_B_2_Pin GPIO_PIN_1
@@ -71,30 +71,36 @@ void Error_Handler(void);
 #define USART2_RX_GPIO_Port GPIOA
 #define PWM_A_Pin GPIO_PIN_4
 #define PWM_A_GPIO_Port GPIOA
-#define BRAKE_B_Pin GPIO_PIN_5
-#define BRAKE_B_GPIO_Port GPIOA
+#define BRAKE_Pin GPIO_PIN_5
+#define BRAKE_GPIO_Port GPIOA
 #define CURRENT_A_Pin GPIO_PIN_6
 #define CURRENT_A_GPIO_Port GPIOA
 #define CURRENT_B_Pin GPIO_PIN_7
 #define CURRENT_B_GPIO_Port GPIOA
-#define BRAKE_Pin GPIO_PIN_0
-#define BRAKE_GPIO_Port GPIOB
+#define Trans0_Pin GPIO_PIN_0
+#define Trans0_GPIO_Port GPIOB
 #define ENC_A_1_Pin GPIO_PIN_8
 #define ENC_A_1_GPIO_Port GPIOA
 #define ENC_A_2_Pin GPIO_PIN_9
 #define ENC_A_2_GPIO_Port GPIOA
-#define DIR_A_Pin GPIO_PIN_10
-#define DIR_A_GPIO_Port GPIOA
+#define DIR_B_Pin GPIO_PIN_10
+#define DIR_B_GPIO_Port GPIOA
 #define T_SWDIO_Pin GPIO_PIN_13
 #define T_SWDIO_GPIO_Port GPIOA
 #define T_SWCLK_Pin GPIO_PIN_14
 #define T_SWCLK_GPIO_Port GPIOA
+#define Trans1_Pin GPIO_PIN_15
+#define Trans1_GPIO_Port GPIOA
 #define T_SWO_Pin GPIO_PIN_3
 #define T_SWO_GPIO_Port GPIOB
 #define PWM_B_Pin GPIO_PIN_4
 #define PWM_B_GPIO_Port GPIOB
-#define DIR_B_Pin GPIO_PIN_5
-#define DIR_B_GPIO_Port GPIOB
+#define DIR_A_Pin GPIO_PIN_5
+#define DIR_A_GPIO_Port GPIOB
+#define Trans2_Pin GPIO_PIN_6
+#define Trans2_GPIO_Port GPIOB
+#define Trans3_Pin GPIO_PIN_7
+#define Trans3_GPIO_Port GPIOB
 #define LD2_Pin GPIO_PIN_8
 #define LD2_GPIO_Port GPIOB
 
