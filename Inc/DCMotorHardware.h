@@ -12,7 +12,8 @@
 #define M_L             0
 #define M_R             1
 #define NB_MOTORS 		2
-#define DUTYMAX         0xFF//PWM_MAX
+#define PWM_MAX			0xFF
+#define DUTYMAX         0xFFFF//PWM_MAX
 
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))

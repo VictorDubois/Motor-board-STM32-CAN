@@ -8,7 +8,7 @@
 
 // At the moment, we keep floats as we are not (yet) in optimization mode
 #define KV2
-//#define USE_CAN_SPEED_ODOMETRY
+// #define USE_CAN_SPEED_ODOMETRY
 
 #ifdef KV1
 #define TICKS_PER_REVOLUTION 4096 	// Nb ticks per wheel revolution
@@ -22,7 +22,7 @@ constexpr float M2006_REDUCTION_RATIO = 36;
 constexpr float MOTOR_WHEEL_RADIUS_MM = 30;
 
 #ifdef USE_CAN_SPEED_ODOMETRY
-constexpr float TICKS_PER_WHEEL_REVOLUTION = M2006_reduction_ratio * 8096.0; 	// Nb ticks per wheel revolution
+constexpr float TICKS_PER_WHEEL_REVOLUTION = M2006_REDUCTION_RATIO * 8096.0; 	// Nb ticks per wheel revolution
 constexpr float WHEEL_RADIUS_MM = MOTOR_WHEEL_RADIUS_MM;
 #else
 // KV2 dedicated odo
