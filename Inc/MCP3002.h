@@ -20,6 +20,8 @@
 // STM32 ADC
 // 20 <=> 200mA
 // "ONE_VOLT" factor = measure/("ONE_AMP" factor * real current)
+#define USE_C620_CURRENT
+
 #ifdef USE_MCP3002
 #define ONE_VOLT        774//2048/5 // TODO find the actual value
 #else

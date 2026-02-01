@@ -8,8 +8,6 @@
 #ifndef DCMOTOR_H_
 #define DCMOTOR_H_
 
-//#define USE_CAN_ODOMETRY true
-
 #include "DCMotorHardware.h"
 #include "MCP3002.h"
 #include "stm32g4xx_hal.h"

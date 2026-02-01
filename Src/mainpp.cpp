@@ -29,8 +29,6 @@ uint8_t RxData[8];
 FDCAN_TxHeaderTypeDef TxHeader;
 uint8_t TxData[8];
 
-const float l_motor_wheel_diameter_m = 0.06;
-
 
 float get_float(const uint8_t* a_string, const int a_beginning)
 {
@@ -747,14 +745,14 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		l_torque |= RxData[4] << 8;
 		l_torque |= RxData[5] ;
 
-		float l_speed_meter_s = l_speed_rpm * l_motor_wheel_diameter_m * M_PI/60.0;
+		float l_speed_meter_s = l_speed_rpm * MOTOR_RPM_TO_WHEEL_M_S;
 
 #ifdef USE_CAN_SPEED_ODOMETRY
-		MotorBoard::getDCMotor().set_speed(1, metersToTicks(l_speed_meter_s));
+		MotorBoard::getDCMotor().set_speed(M_L, metersToTicks(l_speed_meter_s));
 #endif
 
 #ifdef USE_C620_CURRENT
-		MotorBoard::getDCMotor().set_current(1, l_torque);
+		MotorBoard::getDCMotor().set_current(M_L, l_torque);
 #endif
 	}
 
@@ -771,14 +769,14 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		l_torque |= RxData[4] << 8;
 		l_torque |= RxData[5] ;
 
-		float l_speed_meter_s = l_speed_rpm * l_motor_wheel_diameter_m * M_PI/60.0;
+		float l_speed_meter_s = l_speed_rpm * MOTOR_RPM_TO_WHEEL_M_S;
 
 #ifdef USE_CAN_SPEED_ODOMETRY
-		MotorBoard::getDCMotor().set_speed(2, metersToTicks(l_speed_meter_s));
+		MotorBoard::getDCMotor().set_speed(M_R, metersToTicks(l_speed_meter_s));
 #endif
 
 #ifdef USE_C620_CURRENT
-		MotorBoard::getDCMotor().set_current(2, l_torque);
+		MotorBoard::getDCMotor().set_current(M_R, l_torque);
 #endif
 	}
 
