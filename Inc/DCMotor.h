@@ -155,6 +155,7 @@ public:
 	void resetEncodersCounter();
 
 	void set_speed(int MOTOR_ID, int32_t a_new_speed);
+	void set_ticks(int MOTOR_ID, int16_t a_new_ticks);
 
 	void set_current(int MOTOR_ID, int16_t a_new_current);
 

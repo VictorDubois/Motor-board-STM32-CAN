@@ -33,6 +33,7 @@ public:
 	~DCMotorHardware();
 
 	void resetEncodersCounter();
+	void setTicks(const uint32_t encoderId, uint16_t new_tick);
 
 	int16_t getTicks(uint32_t encoderId);
 
@@ -61,6 +62,8 @@ private:
 	TIM_HandleTypeDef* motor_left_timer;
 	int32_t motor_left_timer_channel;
 	FDCAN_HandleTypeDef* hcan;
+	int16_t m_encoder_left_tick = 0;
+	int16_t m_encoder_right_tick = 0;
 };
 
 

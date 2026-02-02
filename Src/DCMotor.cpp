@@ -243,6 +243,11 @@ void DCMotor::set_speed(int MOTOR_ID, int32_t a_new_speed)
 	speed[MOTOR_ID] = a_new_speed;
 }
 
+void DCMotor::set_ticks(int MOTOR_ID, int16_t a_new_ticks)
+{
+	hardware->setTicks(MOTOR_ID, a_new_ticks);
+}
+
 void DCMotor::set_current(int MOTOR_ID, int16_t a_new_current)
 {
 #ifdef USE_C620_CURRENT

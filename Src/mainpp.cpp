@@ -749,6 +749,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 
 #ifdef USE_CAN_SPEED_ODOMETRY
 		MotorBoard::getDCMotor().set_speed(M_L, metersToTicks(l_speed_meter_s));
+		MotorBoard::getDCMotor().set_ticks(M_L, l_mechanical_angle_8192_ticks);
 #endif
 
 #ifdef USE_C620_CURRENT
@@ -773,6 +774,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 
 #ifdef USE_CAN_SPEED_ODOMETRY
 		MotorBoard::getDCMotor().set_speed(M_R, metersToTicks(l_speed_meter_s));
+		MotorBoard::getDCMotor().set_ticks(M_R, l_mechanical_angle_8192_ticks);
 #endif
 
 #ifdef USE_C620_CURRENT

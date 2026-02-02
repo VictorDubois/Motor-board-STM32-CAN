@@ -38,11 +38,25 @@ DCMotorHardware::~DCMotorHardware() {
 	//HAL_GPIO_WritePin(BRAKE_B_GPIO_Port, BRAKE_Pin, GPIO_PIN_RESET);//BRAKE
 }
 
+void DCMotorHardware::setTicks(const uint32_t encoderId, uint16_t new_tick) {
+	if (encoderId == M_L) {
+		m_encoder_left_tick = new_tick;
+	}
+	m_encoder_right_tick = new_tick;
+}
+
 int16_t DCMotorHardware::getTicks(const uint32_t encoderId) {
+#ifdef USE_CAN_ODOMETRY
+	if (encoderId == M_L) {
+		return m_encoder_left_tick;
+	}
+	return m_encoder_right_tick;
+#else
 	if (encoderId == M_L) {
 		return -encoder_left_timer->CNT;
 	}
 	return encoder_right_timer->CNT;
+#endif
 }
 
 void DCMotorHardware::resetEncodersCounter(){
