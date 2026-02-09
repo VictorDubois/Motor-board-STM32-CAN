@@ -86,10 +86,10 @@ void DCMotorHardware::setPWM(const int32_t pwm_left, const int32_t pwm_right) {
 
 	TxHeader.Identifier = CAN::can_ids::C620_CURRENT_COMMAND;
 
-	TxData[0] = (pwm_right >> 8) & 0xFF;
-	TxData[1] = (pwm_right) & 0xFF;
-	TxData[2] = (pwm_left >> 8) & 0xFF;
-	TxData[3] = (pwm_left) & 0xFF;
+	TxData[0] = ((pwm_left) >> 8) & 0xFF;
+	TxData[1] = (pwm_left) & 0xFF;
+	TxData[2] = ((-pwm_right) >> 8) & 0xFF;
+	TxData[3] = (-pwm_right) & 0xFF;
 	TxData[4] = 0 & 0xFF;
 	TxData[5] = 0 & 0xFF;
 	TxData[6] = 0 & 0xFF;
