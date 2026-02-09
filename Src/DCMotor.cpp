@@ -349,7 +349,8 @@ void DCMotor::control_ramp_speed_polar(void) {
 	linear_pid_d = 0.075*linear_Ku*linear_Tu;
 
 	// Manual calibration, based on https://tlk-energy.de/blog-en/practical-pid-tuning-guide
-	linear_pid_p = 0.0032;//0.016f;
+	// linear_pid_p = 0.0032f; //KV2 Maxon
+	linear_pid_p = 0.15; // KV2 C610
 	float Ti_lin_manu = 0.075;
 	linear_pid_i = linear_pid_p/Ti_lin_manu;
 	linear_pid_d = 0;
@@ -365,7 +366,8 @@ void DCMotor::control_ramp_speed_polar(void) {
 	float angular_pid_d = 0.0f*angular_Ku*angular_Tu;
 
 	// Manual calibration, based on https://tlk-energy.de/blog-en/practical-pid-tuning-guide
-	angular_pid_p = 0.007;//0.004
+	// angular_pid_p = 0.007; // KV2 Maxon
+	angular_pid_p = 0.1; // KV2 C610
 	float Ti_manu = 0.26; //maybe 0.27 or 0.28 is better
 	angular_pid_i = angular_pid_p/Ti_manu;
 	angular_pid_d = 0;
