@@ -41,7 +41,15 @@ int MCP3002::readCurrent(int adcnum) {
 	//return 20;
 #ifdef USE_MCP3002
 	return 2048 - readADC(adcnum);
+
 #else
+	#ifdef USE_C620_CURRENT
+		if (adcnum)
+		{
+			return m_current_right;
+		}
+		return m_current_left;
+	#endif
 	return readADC(adcnum);
 #endif
 }
