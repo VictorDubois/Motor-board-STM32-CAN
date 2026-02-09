@@ -23,17 +23,21 @@
 #define USE_C620_CURRENT
 
 #ifdef USE_MCP3002
-#define ONE_VOLT        774//2048/5 // TODO find the actual value
+	#define ONE_VOLT        774 // MCP3002 adc value for one volt
 #else
-#define ONE_VOLT        265
+	#define ONE_VOLT        265 // STM32 adc value for one volt
 #endif
-#define ONE_AMP         (0.377*ONE_VOLT)
+
+#ifdef USE_C620_CURRENT
+	#define ONE_AMP         300 // arbitrary C620 value that lead to reasonable threshold for 10A. @TODO calibrate
+#else
+	#define ONE_AMP         (0.377*ONE_VOLT) // Volt to amp conversion of LMD18200
+#endif
 
 #ifndef MCP3002_H_
 #define MCP3002_H_
 #include "stm32g4xx_hal.h"
 #define CURRENT_READER_OFFLINE 2048
-//#define USE_C620_CURRENT true
 
 class MCP3002
 {
