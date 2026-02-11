@@ -74,6 +74,7 @@ public:
 
 	void update();
 	void update_inputs();
+	void updateCurrent();
 private:
 	//static ros::NodeHandle nh;
 	static DCMotorHardware motorsHardware;

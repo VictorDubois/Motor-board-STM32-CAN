@@ -314,7 +314,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 	if (htim->Instance == TIM15) {
 		MotorBoard::getDCMotor().update();
-
 	}
 	if (htim->Instance == TIM7) {
 	}
@@ -508,6 +507,30 @@ void MotorBoard::resetUart()
 	doResetUart(huart2);
 }
 
+void MotorBoard::updateCurrent()
+{
+	TxHeader.Identifier = CAN::can_ids::CURRENT_LIMIT;
+	uint16_t left_current_mA = motors.get_accumulated_current(M_L) /ONE_AMP; // 2 bytes
+	uint16_t right_current_mA = motors.get_accumulated_current(M_R) /ONE_AMP; // 2 bytes
+	uint16_t left_wheel_unstalled_in_ms = motors.get_remaining_time_stopped(M_L); // 2 bytes Nb of ms until the robot's left wheel is allowed to move again
+	uint16_t right_wheel_unstalled_in_ms = motors.get_remaining_time_stopped(M_R);
+
+	TxData[0] = (left_current_mA >> 8) & 0xFF;
+	TxData[1] = (left_current_mA ) & 0xFF;
+	TxData[2] = (right_current_mA >> 8) & 0xFF;
+	TxData[3] = (right_current_mA ) & 0xFF;
+	TxData[4] = (left_wheel_unstalled_in_ms >> 8) & 0xFF;
+	TxData[5] = (left_wheel_unstalled_in_ms ) & 0xFF;
+	TxData[6] = (right_wheel_unstalled_in_ms >> 8) & 0xFF;
+	TxData[7] = (right_wheel_unstalled_in_ms) & 0xFF;
+
+	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
+	{
+		/* Transmission request Error */
+		MotorBoard::getDCMotor().resetMotors();
+	}
+}
+
 void MotorBoard::update() {
 	nb_updates_without_message++;
 
@@ -658,26 +681,7 @@ void MotorBoard::update() {
 		MotorBoard::getDCMotor().resetMotors();
 	}
 
-	TxHeader.Identifier = CAN::can_ids::CURRENT_LIMIT;
-	uint16_t left_current_mA = motors.get_accumulated_current(M_L) /ONE_AMP; // 2 bytes
-	uint16_t right_current_mA = motors.get_accumulated_current(M_R) /ONE_AMP; // 2 bytes
-	uint16_t left_wheel_unstalled_in_ms = motors.get_remaining_time_stopped(M_L); // 2 bytes Nb of ms until the robot's left wheel is allowed to move again
-	uint16_t right_wheel_unstalled_in_ms = motors.get_remaining_time_stopped(M_R);
 
-	TxData[0] = (left_current_mA >> 8) & 0xFF;
-	TxData[1] = (left_current_mA ) & 0xFF;
-	TxData[2] = (right_current_mA >> 8) & 0xFF;
-	TxData[3] = (right_current_mA ) & 0xFF;
-	TxData[4] = (left_wheel_unstalled_in_ms >> 8) & 0xFF;
-	TxData[5] = (left_wheel_unstalled_in_ms ) & 0xFF;
-	TxData[6] = (right_wheel_unstalled_in_ms >> 8) & 0xFF;
-	TxData[7] = (right_wheel_unstalled_in_ms) & 0xFF;
-
-	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
-	{
-		/* Transmission request Error */
-		//MotorBoard::getDCMotor().resetMotors();
-	}
 
 
 	/*TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED_FLOAT;
@@ -745,9 +749,9 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		l_torque |= RxData[4] << 8;
 		l_torque |= RxData[5] ;
 
-		float l_speed_meter_s = l_speed_rpm * MOTOR_RPM_TO_WHEEL_M_S;
 
 #ifdef USE_CAN_SPEED_ODOMETRY
+		float l_speed_meter_s = l_speed_rpm * MOTOR_RPM_TO_WHEEL_M_S;
 		MotorBoard::getDCMotor().set_speed(M_L, metersToTicks(l_speed_meter_s));
 		MotorBoard::getDCMotor().set_ticks(M_L, l_mechanical_angle_8192_ticks);
 #endif
@@ -770,9 +774,9 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		l_torque |= RxData[4] << 8;
 		l_torque |= RxData[5] ;
 
-		float l_speed_meter_s = l_speed_rpm * MOTOR_RPM_TO_WHEEL_M_S;
 
 #ifdef USE_CAN_SPEED_ODOMETRY
+		float l_speed_meter_s = l_speed_rpm * MOTOR_RPM_TO_WHEEL_M_S;
 		MotorBoard::getDCMotor().set_speed(M_R, metersToTicks(l_speed_meter_s));
 		MotorBoard::getDCMotor().set_ticks(M_R, l_mechanical_angle_8192_ticks);
 #endif
@@ -915,7 +919,7 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 	}
 
 	HAL_TIM_Base_Start_IT(a_loopTimHandler);
-	uint32_t waiting_time = 5;
+	uint32_t waiting_time = 5; // ms
 
 	// Make sure that the Uart/DMA is correctly initialized, or signal it
 	while (HAL_UART_Receive_DMA(huart2, rx_buffer, UART_MSG_SIZE) != HAL_OK)
@@ -926,9 +930,11 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 
 	while(true) {
 		myboard.update();
+		HAL_Delay(1); // ms
+
+		myboard.updateCurrent();
 
 
-
-		HAL_Delay(waiting_time);
+		HAL_Delay(waiting_time - 1); // ms
 	}
 }
