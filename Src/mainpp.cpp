@@ -510,8 +510,8 @@ void MotorBoard::resetUart()
 void MotorBoard::updateCurrent()
 {
 	TxHeader.Identifier = CAN::can_ids::CURRENT_LIMIT;
-	uint16_t left_current_mA = motors.get_accumulated_current(M_L) /ONE_AMP; // 2 bytes
-	uint16_t right_current_mA = motors.get_accumulated_current(M_R) /ONE_AMP; // 2 bytes
+	int16_t left_current_mA = motors.get_accumulated_current(M_L) / ONE_MILLIAMP; // 2 bytes
+	int16_t right_current_mA = motors.get_accumulated_current(M_R) / ONE_MILLIAMP; // 2 bytes
 	uint16_t left_wheel_unstalled_in_ms = motors.get_remaining_time_stopped(M_L); // 2 bytes Nb of ms until the robot's left wheel is allowed to move again
 	uint16_t right_wheel_unstalled_in_ms = motors.get_remaining_time_stopped(M_R);
 

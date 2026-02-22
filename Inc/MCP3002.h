@@ -29,10 +29,12 @@
 #endif
 
 #ifdef USE_C620_CURRENT
-	#define ONE_AMP         300 // arbitrary C620 value that lead to reasonable threshold for 10A. @TODO calibrate
+	#define ONE_AMP         300 // 1700 arbitrary C620 value that lead to reasonable threshold for 10A. @TODO calibrate
 #else
 	#define ONE_AMP         (0.377*ONE_VOLT) // Volt to amp conversion of LMD18200
 #endif
+
+#define ONE_MILLIAMP ONE_AMP / 1000.f
 
 #ifndef MCP3002_H_
 #define MCP3002_H_
