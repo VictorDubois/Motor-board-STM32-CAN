@@ -529,6 +529,32 @@ void MotorBoard::updateCurrent()
 		/* Transmission request Error */
 		MotorBoard::getDCMotor().resetMotors();
 	}
+
+
+	int32_t right_speed = motors.get_speed(M_R);
+	int32_t left_speed = motors.get_speed(M_L);
+
+	float speedVx = ticksToMeters(left_speed + right_speed)/2;
+	float speedWz = ticksToRads(right_speed - left_speed)/2; // rad/s
+
+	TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED;
+	int32_t speedVx_µm_s = speedVx * 1000000.f;   // 4 bytes
+	int32_t speedWz_mrad_s = speedWz * 1000.f; // 4 bytes
+
+	TxData[0] = (speedVx_µm_s >> 24) & 0xFF;
+	TxData[1] = (speedVx_µm_s >> 16) & 0xFF;
+	TxData[2] = (speedVx_µm_s >> 8) & 0xFF;
+	TxData[3] = (speedVx_µm_s ) & 0xFF;
+	TxData[4] = (speedWz_mrad_s >> 24) & 0xFF;
+	TxData[5] = (speedWz_mrad_s >> 16) & 0xFF;
+	TxData[6] = (speedWz_mrad_s >> 8) & 0xFF;
+	TxData[7] = (speedWz_mrad_s) & 0xFF;
+
+	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
+	{
+		/* Transmission request Error */
+		MotorBoard::getDCMotor().resetMotors();
+	}
 }
 
 void MotorBoard::update() {
@@ -661,27 +687,6 @@ void MotorBoard::update() {
 		// Transmission request Error
 		MotorBoard::getDCMotor().resetMotors();
 	}*/
-
-	TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED;
-    int32_t speedVx_µm_s = speedVx * 1000000.f;   // 4 bytes
-    int32_t speedWz_mrad_s = speedWz * 1000.f; // 4 bytes
-
-	TxData[0] = (speedVx_µm_s >> 24) & 0xFF;
-	TxData[1] = (speedVx_µm_s >> 16) & 0xFF;
-	TxData[2] = (speedVx_µm_s >> 8) & 0xFF;
-	TxData[3] = (speedVx_µm_s ) & 0xFF;
-	TxData[4] = (speedWz_mrad_s >> 24) & 0xFF;
-	TxData[5] = (speedWz_mrad_s >> 16) & 0xFF;
-	TxData[6] = (speedWz_mrad_s >> 8) & 0xFF;
-	TxData[7] = (speedWz_mrad_s) & 0xFF;
-
-	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
-	{
-		/* Transmission request Error */
-		MotorBoard::getDCMotor().resetMotors();
-	}
-
-
 
 
 	/*TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED_FLOAT;
