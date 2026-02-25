@@ -143,7 +143,8 @@ void motors_cmd_cb(const CAN::MotorBoardCmdInput &motors_cmd_msg)
 	MotorBoard::getDCMotor().set_enable_motors((bool)motors_cmd_msg.enable_motors);
 
 	if (!motors_cmd_msg.enable_motors) {
-		MotorBoard::getDCMotor().resetMotors();
+		//MotorBoard::getDCMotor().resetMotors();
+		MotorBoard::getDCMotor().set_enable_motors(false);
 		return;
 	}
 
@@ -527,7 +528,8 @@ void MotorBoard::updateCurrent()
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
 		/* Transmission request Error */
-		MotorBoard::getDCMotor().resetMotors();
+		MotorBoard::getDCMotor().resetMotor(M_L);
+		MotorBoard::getDCMotor().resetMotor(M_R);
 	}
 
 
@@ -553,7 +555,8 @@ void MotorBoard::updateCurrent()
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
 		/* Transmission request Error */
-		MotorBoard::getDCMotor().resetMotors();
+		MotorBoard::getDCMotor().resetMotor(M_L);
+		MotorBoard::getDCMotor().resetMotor(M_R);
 	}
 }
 
@@ -650,7 +653,8 @@ void MotorBoard::update() {
 	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
 		/* Transmission request Error */
-		MotorBoard::getDCMotor().resetMotors();
+		MotorBoard::getDCMotor().resetMotor(M_L);
+		MotorBoard::getDCMotor().resetMotor(M_R);
 	}
 
 	TxHeader.Identifier = CAN::can_ids::ODOMETRY_THETA;
@@ -668,7 +672,8 @@ void MotorBoard::update() {
     if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
 	{
 		/* Transmission request Error */
-		MotorBoard::getDCMotor().resetMotors();
+		MotorBoard::getDCMotor().resetMotor(M_L);
+		MotorBoard::getDCMotor().resetMotor(M_R);
 	}
 
 	/*TxHeader.Identifier = CAN::can_ids::ODOMETRY_XY_FLOAT;
@@ -853,7 +858,8 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 
 		if (!l_motor_enable)
 		{
-			MotorBoard::getDCMotor().resetMotors();
+			MotorBoard::getDCMotor().resetMotor(M_L);
+			MotorBoard::getDCMotor().resetMotor(M_R);
 		}
 	}
   }

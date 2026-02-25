@@ -109,7 +109,10 @@ void DCMotor::resetEncodersCounter()
 
 void DCMotor::override_PWM(int pwm_left, int pwm_right)
 {
-	resetMotors();
+	// Reset all the motors variables, without sending a 0 command
+	resetMotor(M_L);
+	resetMotor(M_R);
+
 	override_pwm = true;
 	override_pwms[M_L] = pwm_left;
 	override_pwms[M_R] = pwm_right;
@@ -487,6 +490,8 @@ void DCMotor::set_enable_motors(bool a_enable_motors)
 
 	if (!m_enable_motors)
 	{
-		resetMotors();
+		//resetMotors();
+		resetMotor(M_L);
+		resetMotor(M_R);
 	}
 }
