@@ -5,6 +5,8 @@
  *      Author: yoneken
  */
 #include <mainpp.h>
+#include "canManager.h"
+
 #include <constants.h>
 extern "C" {
 	#include "main.h"
@@ -144,7 +146,9 @@ void motors_cmd_cb(const CAN::MotorBoardCmdInput &motors_cmd_msg)
 
 	if (!motors_cmd_msg.enable_motors) {
 		//MotorBoard::getDCMotor().resetMotors();
-		MotorBoard::getDCMotor().set_enable_motors(false);
+		MotorBoard::getDCMotor().resetMotor(M_L);
+		MotorBoard::getDCMotor().resetMotor(M_R);
+
 		return;
 	}
 
@@ -525,12 +529,8 @@ void MotorBoard::updateCurrent()
 	TxData[6] = (right_wheel_unstalled_in_ms >> 8) & 0xFF;
 	TxData[7] = (right_wheel_unstalled_in_ms) & 0xFF;
 
-	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
-	{
-		/* Transmission request Error */
-		MotorBoard::getDCMotor().resetMotor(M_L);
-		MotorBoard::getDCMotor().resetMotor(M_R);
-	}
+
+	CAN_Enqueue(&TxHeader, TxData);
 
 
 	int32_t right_speed = motors.get_speed(M_R);
@@ -552,12 +552,7 @@ void MotorBoard::updateCurrent()
 	TxData[6] = (speedWz_mrad_s >> 8) & 0xFF;
 	TxData[7] = (speedWz_mrad_s) & 0xFF;
 
-	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
-	{
-		/* Transmission request Error */
-		MotorBoard::getDCMotor().resetMotor(M_L);
-		MotorBoard::getDCMotor().resetMotor(M_R);
-	}
+	CAN_Enqueue(&TxHeader, TxData);
 }
 
 void MotorBoard::update() {
@@ -632,11 +627,7 @@ void MotorBoard::update() {
     TxData[5] = (poseY_mm >> 16) & 0xFF;
     TxData[6] = (poseY_mm >> 8) & 0xFF;
     TxData[7] = (poseY_mm) & 0xFF;
-	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
-	{
-		// Transmission request Error
-		MotorBoard::getDCMotor().resetMotors();
-	}*/
+	CAN_Enqueue(&TxHeader, TxData);*/
 
 	TxHeader.Identifier = CAN::can_ids::ODOMETRY_XYum;
 	int32_t poseX_um = X * 1000000;
@@ -650,12 +641,8 @@ void MotorBoard::update() {
 	TxData[5] = (poseY_um >> 16) & 0xFF;
 	TxData[6] = (poseY_um >> 8) & 0xFF;
 	TxData[7] = (poseY_um) & 0xFF;
-	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
-	{
-		/* Transmission request Error */
-		MotorBoard::getDCMotor().resetMotor(M_L);
-		MotorBoard::getDCMotor().resetMotor(M_R);
-	}
+	CAN_Enqueue(&TxHeader, TxData);
+
 
 	TxHeader.Identifier = CAN::can_ids::ODOMETRY_THETA;
     int32_t angleRz_centi_deg = current_theta_rad * (100.0f * 180.f / M_PI);
@@ -669,39 +656,24 @@ void MotorBoard::update() {
 	TxData[5] = (currentLeft) & 0xFF;
 	TxData[6] = (currentRight >> 8) & 0xFF;
 	TxData[7] = (currentRight) & 0xFF;
-    if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
-	{
-		/* Transmission request Error */
-		MotorBoard::getDCMotor().resetMotor(M_L);
-		MotorBoard::getDCMotor().resetMotor(M_R);
-	}
+	CAN_Enqueue(&TxHeader, TxData);
+
 
 	/*TxHeader.Identifier = CAN::can_ids::ODOMETRY_XY_FLOAT;
 	memcpy(TxData, &(X), sizeof(float));
 	memcpy(TxData + sizeof(float), &(Y), sizeof(float));
-	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
-	{
-		// Transmission request Error
-		MotorBoard::getDCMotor().resetMotors();
-	}
+	CAN_Enqueue(&TxHeader, TxData);
 
 	TxHeader.Identifier = CAN::can_ids::ODOMETRY_THETA;
 	memcpy(TxData, &(current_theta_rad), sizeof(float));
-	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
-	{
-		// Transmission request Error
-		MotorBoard::getDCMotor().resetMotors();
-	}*/
+	CAN_Enqueue(&TxHeader, TxData);*/
 
 
 	/*TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED_FLOAT;
 	memcpy(TxData, &(speedVx), sizeof(float));
 	memcpy(TxData+ sizeof(float), &(speedWz), sizeof(float));
-	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
-	{
-		// Transmission request Error
-		MotorBoard::getDCMotor().resetMotors();
-	}*/
+	CAN_Enqueue(&TxHeader, TxData);*/
+
 
 
 	if (false && message_counter%100 == 0)
@@ -940,10 +912,13 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 	}
 
 	while(true) {
+
 		myboard.update();
-		HAL_Delay(1); // ms
+		//HAL_Delay(1); // ms
 
 		myboard.updateCurrent();
+		CAN_ProcessTxQueue(hcan);
+
 
 
 		HAL_Delay(waiting_time - 1); // ms

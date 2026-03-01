@@ -7,6 +7,7 @@
 
 #include "DCMotorHardware.h"
 #include "CanStruct/can_structs.h"
+#include "canManager.h"
 extern "C" {
 	#include "main.h" // Include pin definitions
 }
@@ -74,7 +75,6 @@ void DCMotorHardware::setPWM(const int32_t pwm_left, const int32_t pwm_right) {
 	uint8_t TxData[8];
 
 	/* Prepare Tx Header */
-	TxHeader.Identifier = 0x321;
 	TxHeader.IdType = FDCAN_STANDARD_ID;
 	TxHeader.TxFrameType = FDCAN_DATA_FRAME;
 	TxHeader.DataLength = FDCAN_DLC_BYTES_8;
@@ -94,11 +94,7 @@ void DCMotorHardware::setPWM(const int32_t pwm_left, const int32_t pwm_right) {
 	TxData[5] = 0 & 0xFF;
 	TxData[6] = 0 & 0xFF;
 	TxData[7] = 0 & 0xFF;
-	if (HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, TxData) != HAL_OK)
-	{
-		/* Transmission request Error */
-		//MotorBoard::getDCMotor().resetMotors();
-	}
+	CAN_Enqueue(&TxHeader, TxData);
 
 	// PWM
 
