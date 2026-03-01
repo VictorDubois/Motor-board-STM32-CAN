@@ -718,7 +718,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
         MotorBoard::getDCMotor().set_speed_order(metersToTicks(l_cmd_vel.linear_x_m), radsToTicks(-l_cmd_vel.angular_z_rad));
     }
 
-    if ((RxHeader.Identifier == CAN::can_ids::C620_OUTPUT_1) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+    else if ((RxHeader.Identifier == CAN::can_ids::C620_OUTPUT_1) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
 	{
 		uint16_t l_mechanical_angle_8192_ticks = 0;
 		int16_t l_speed_rpm = 0;
@@ -743,7 +743,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 #endif
 	}
 
-    if ((RxHeader.Identifier == CAN::can_ids::C620_OUTPUT_2) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+    else if ((RxHeader.Identifier == CAN::can_ids::C620_OUTPUT_2) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
 	{
 		uint16_t l_mechanical_angle_8192_ticks = 0;
 		int16_t l_speed_rpm = 0;
@@ -768,7 +768,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 #endif
 	}
 
-    if ((RxHeader.Identifier == CAN::can_ids::CMD_VEL) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+    else if ((RxHeader.Identifier == CAN::can_ids::CMD_VEL) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
         {
         	CAN::CmdVelFloat l_cmd_vel;
 
@@ -797,7 +797,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
             MotorBoard::getDCMotor().set_speed_order(metersToTicks(l_cmd_vel.linear_x_m), radsToTicks(-l_cmd_vel.angular_z_rad));
         }
 
-    if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_CMD_INPUT) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+    else if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_CMD_INPUT) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
 	{
 		CAN::MotorBoardCmdInput l_cmd_inputs;
 
@@ -811,7 +811,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 
 		motors_cmd_cb(l_cmd_inputs);
 	}
-    if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_CURRENT_INPUT) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+    else if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_CURRENT_INPUT) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
 	{
 		CAN::MotorBoardCurrentInput l_cmd_current_inputs;
 
@@ -824,7 +824,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		MotorBoard::getDCMotor().set_max_current(l_cmd_current_inputs.max_current_left_mA/1000.0f, l_cmd_current_inputs.max_current_right_mA/1000.0f);
 	}
 
-    if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_ENABLE) && (RxHeader.IdType == FDCAN_STANDARD_ID))
+    else if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_ENABLE) && (RxHeader.IdType == FDCAN_STANDARD_ID))
 	{
 		bool l_motor_enable = RxData[0];
 
@@ -833,6 +833,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 			MotorBoard::getDCMotor().resetMotor(M_L);
 			MotorBoard::getDCMotor().resetMotor(M_R);
 		}
+
 	}
   }
 }
