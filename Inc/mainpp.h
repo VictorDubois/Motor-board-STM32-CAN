@@ -56,6 +56,7 @@ constexpr float ticksToRads(int32_t ticks);
 
 void motors_cmd_cb(const krabi_msgs::motors_cmd &motors_cmd_msg);
 void motors_cmd_cb(const CAN::MotorBoardCmdInput &motors_cmd_msg);
+void digital_outputs_cb(const CAN::DigitalOutputs &digital_outputs_msg);
 void cmd_vel_cb(const geometry_msgs::Twist& twist);
 void parameters_cb(const krabi_msgs::motors_parameters& parameters);
 void enable_motor_cb(const std_msgs::Bool& enable);

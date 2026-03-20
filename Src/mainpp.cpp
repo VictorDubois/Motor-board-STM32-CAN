@@ -162,6 +162,35 @@ void motors_cmd_cb(const CAN::MotorBoardCmdInput &motors_cmd_msg)
 	}
 }
 
+void digital_outputs_cb(const CAN::DigitalOutputs &digital_outputs_msg)
+{
+	GPIO_PinState trans_0 = GPIO_PIN_RESET;
+	GPIO_PinState trans_1 = GPIO_PIN_RESET;
+	GPIO_PinState trans_2 = GPIO_PIN_RESET;
+	GPIO_PinState trans_3 = GPIO_PIN_RESET;
+	if(digital_outputs_msg.enable_outputs & (1<<4))
+	{
+		trans_0 = GPIO_PIN_SET;
+	}
+	if(digital_outputs_msg.enable_outputs & (1<<5))
+	{
+		trans_1 = GPIO_PIN_SET;
+	}
+	if(digital_outputs_msg.enable_outputs & (1<<6))
+	{
+		trans_2 = GPIO_PIN_SET;
+	}
+	if(digital_outputs_msg.enable_outputs & (1<<7))
+	{
+		trans_3 = GPIO_PIN_SET;
+	}
+
+	HAL_GPIO_WritePin(Trans0_GPIO_Port, Trans0_Pin, trans_0);
+	HAL_GPIO_WritePin(Trans1_GPIO_Port, Trans1_Pin, trans_1);
+	HAL_GPIO_WritePin(Trans2_GPIO_Port, Trans2_Pin, trans_2);
+	HAL_GPIO_WritePin(Trans3_GPIO_Port, Trans3_Pin, trans_3);
+}
+
 void parameters_cb(const krabi_msgs::motors_parameters& a_parameters)
 {
 	MotorBoard::getDCMotor().set_max_current(a_parameters.max_current);
@@ -811,6 +840,15 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 
 		motors_cmd_cb(l_cmd_inputs);
 	}
+    else if ((RxHeader.Identifier == CAN::can_ids::DIGITAL_OUTPUTS) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+    {
+		CAN::DigitalOutputs l_digital_outputs;
+
+		l_digital_outputs.enable_outputs = RxData[1] | (RxData[0] << 8);
+		l_digital_outputs.enable_power = RxData[2];
+
+		digital_outputs_cb(l_digital_outputs);
+	}
     else if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_CURRENT_INPUT) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
 	{
 		CAN::MotorBoardCurrentInput l_cmd_current_inputs;
@@ -911,6 +949,11 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 		toggleLed();
 		HAL_Delay(300);
 	}
+
+	CAN::DigitalOutputs init_digital_outputs;
+	init_digital_outputs.enable_outputs = 0;
+	init_digital_outputs.enable_power= 0;
+	digital_outputs_cb(init_digital_outputs);
 
 	while(true) {
 
