@@ -23,18 +23,22 @@
 #define USE_C620_CURRENT
 
 #ifdef USE_MCP3002
-	#define ONE_VOLT        774 // MCP3002 adc value for one volt
+	#define ONE_VOLT        774.f // MCP3002 adc value for one volt
 #else
-	#define ONE_VOLT        265 // STM32 adc value for one volt
+	#define ONE_VOLT        265.f // STM32 adc value for one volt
 #endif
 
 #ifdef USE_C620_CURRENT
-	#define ONE_AMP         300 // 1700 arbitrary C620 value that lead to reasonable threshold for 10A. @TODO calibrate
+//4000 = 0.80A sur deux moteurs
+//2000 = 0.25A sur deux moteurs,
+//1050 = 0.133A sur deux moteurs
+//300  = 0.09A sur deux moteurs (arrêt)
+	#define ONE_AMP         300.f // 1700 arbitrary C620 value that lead to reasonable threshold for 10A. @TODO calibrate
 #else
-	#define ONE_AMP         (0.377*ONE_VOLT) // Volt to amp conversion of LMD18200
+	#define ONE_AMP         (0.377f*ONE_VOLT) // Volt to amp conversion of LMD18200
 #endif
 
-#define ONE_MILLIAMP ONE_AMP / 1000.f
+#define ONE_MILLIAMP (ONE_AMP / 1000.f)
 
 #ifndef MCP3002_H_
 #define MCP3002_H_
