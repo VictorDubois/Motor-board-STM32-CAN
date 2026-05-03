@@ -33,7 +33,7 @@
 //2000 = 0.25A sur deux moteurs,
 //1050 = 0.133A sur deux moteurs
 //300  = 0.09A sur deux moteurs (arrêt)
-	#define ONE_AMP         300.f // 1700 arbitrary C620 value that lead to reasonable threshold for 10A. @TODO calibrate
+	#define ONE_AMP         1700.f // 1700 arbitrary C620 value that lead to reasonable threshold for 10A. @TODO calibrate
 #else
 	#define ONE_AMP         (0.377f*ONE_VOLT) // Volt to amp conversion of LMD18200
 #endif
