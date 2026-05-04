@@ -128,6 +128,10 @@ public:
 
 	void set_pid_d(float a_pid_d);
 
+	void set_linear_pi(float p, float i);
+	void set_angular_pi(float p, float i);
+	void set_derivative(float linear_d, float angular_d);
+
 	/**
 	 * @brief setter for the overcurrent
 	 * @param a_max_current the overcurrent threshold
@@ -202,6 +206,12 @@ private:
 	float pid_p;
 	float pid_i;
 	float pid_d;
+	float m_linear_pid_p;
+	float m_linear_pid_i;
+	float m_linear_pid_d;
+	float m_angular_pid_p;
+	float m_angular_pid_i;
+	float m_angular_pid_d;
 	float max_current;
 
 	float max_currents[NB_MOTORS];

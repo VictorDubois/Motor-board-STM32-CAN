@@ -65,6 +65,13 @@ DCMotor::DCMotor(DCMotorHardware* a_hardware, MCP3002* a_current_reader) : hardw
 	pid_i = 0.00625;
 	pid_d = 0.0197;
 
+	m_linear_pid_p = 0.15f;
+	m_linear_pid_i = 0.15f;
+	m_linear_pid_d = 0.0f;
+	m_angular_pid_p = 0.1f;
+	m_angular_pid_i = 0.13f;
+	m_angular_pid_d = 0.0f;
+
 	last_update_time = HAL_GetTick();
 
 	override_pwm = false;
@@ -338,42 +345,12 @@ void DCMotor::limitLinearFirst(int32_t& linear, int32_t& angular, const int32_t 
 
 
 void DCMotor::control_ramp_speed_polar(void) {
-	// **** Linear ****
-	// Ziegler Nichols
-	float linear_Ku = 0.018f;
-	float linear_Tu = 0.103448276f;
-	float linear_pid_p =linear_Ku * 0.45f;
-	//linear_pid_p *=0.9f;
-	float linear_pid_i = linear_Ku * 0.54f/linear_Tu;
-	float linear_pid_d = 0*linear_Ku*linear_Tu;
-
-	linear_pid_p = linear_Ku * 0.6f;
-	linear_pid_i = linear_Ku * 1.2f/linear_Tu;
-	linear_pid_d = 0.075*linear_Ku*linear_Tu;
-
-	// Manual calibration, based on https://tlk-energy.de/blog-en/practical-pid-tuning-guide
-	// linear_pid_p = 0.0032f; //KV2 Maxon
-	linear_pid_p = 0.15; // KV2 C610
-	float Ti_lin_manu = 0.075;
-	linear_pid_i = linear_pid_p/Ti_lin_manu;
-	linear_pid_d = 0;
-
-
-	// **** Angular ****
-	// Ziegler Nichols
-	float angular_Ku = 0.03f;
-	float angular_Tu = 0.101111111f;
-	float angular_pid_p = angular_Ku * 0.45f ;
-	//angular_pid_p *=0.8f;
-	float angular_pid_i = angular_Ku * 0.64f/angular_Tu;
-	float angular_pid_d = 0.0f*angular_Ku*angular_Tu;
-
-	// Manual calibration, based on https://tlk-energy.de/blog-en/practical-pid-tuning-guide
-	// angular_pid_p = 0.007; // KV2 Maxon
-	angular_pid_p = 0.1; // KV2 C610
-	float Ti_manu = 0.26; //maybe 0.27 or 0.28 is better
-	angular_pid_i = angular_pid_p/Ti_manu;
-	angular_pid_d = 0;
+	float linear_pid_p = m_linear_pid_p;
+	float linear_pid_i = m_linear_pid_i;
+	float linear_pid_d = m_linear_pid_d;
+	float angular_pid_p = m_angular_pid_p;
+	float angular_pid_i = m_angular_pid_i;
+	float angular_pid_d = m_angular_pid_d;
 
 
 
@@ -471,6 +448,32 @@ void DCMotor::set_pid_i(float a_pid_i)
 void DCMotor::set_pid_d(float a_pid_d)
 {
 	pid_d = a_pid_d;
+}
+
+void DCMotor::set_linear_pi(float p, float i)
+{
+	if (m_linear_pid_p != p || m_linear_pid_i !=i)
+	{
+		resetMotors();
+	}
+	m_linear_pid_p = p;
+	m_linear_pid_i = i;
+}
+
+void DCMotor::set_angular_pi(float p, float i)
+{
+	if (m_angular_pid_p != p || m_angular_pid_i !=i)
+	{
+		resetMotors();
+	}
+	m_angular_pid_p = p;
+	m_angular_pid_i = i;
+}
+
+void DCMotor::set_derivative(float linear_d, float angular_d)
+{
+	m_linear_pid_d = linear_d;
+	m_angular_pid_d = angular_d;
 }
 
 void DCMotor::set_max_current(float a_max_current)

@@ -873,6 +873,24 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		}
 
 	}
+    else if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_LINEAR_PI_SET) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+    {
+        CAN::MotorBoardPiSet msg;
+        memcpy(&msg, RxData, sizeof(msg));
+        MotorBoard::getDCMotor().set_linear_pi(msg.p, msg.i);
+    }
+    else if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_ANGULAR_PI_SET) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+    {
+        CAN::MotorBoardPiSet msg;
+        memcpy(&msg, RxData, sizeof(msg));
+        MotorBoard::getDCMotor().set_angular_pi(msg.p, msg.i);
+    }
+    else if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_DERIVATIVE_SET) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
+    {
+        CAN::MotorBoardDerivativeSet msg;
+        memcpy(&msg, RxData, sizeof(msg));
+        MotorBoard::getDCMotor().set_derivative(msg.linear_d, msg.angular_d);
+    }
   }
 }
 
