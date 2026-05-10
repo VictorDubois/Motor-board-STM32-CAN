@@ -168,19 +168,19 @@ void digital_outputs_cb(const CAN::DigitalOutputs &digital_outputs_msg)
 	GPIO_PinState trans_1 = GPIO_PIN_RESET;
 	GPIO_PinState trans_2 = GPIO_PIN_RESET;
 	GPIO_PinState trans_3 = GPIO_PIN_RESET;
-	if(digital_outputs_msg.enable_outputs & (1<<4))
+	if(digital_outputs_msg.enable_outputs & (1<<9))
 	{
 		trans_0 = GPIO_PIN_SET;
 	}
-	if(digital_outputs_msg.enable_outputs & (1<<5))
+	if(digital_outputs_msg.enable_outputs & (1<<11))
 	{
 		trans_1 = GPIO_PIN_SET;
 	}
-	if(digital_outputs_msg.enable_outputs & (1<<6))
+	if(digital_outputs_msg.enable_outputs & (1<<13))
 	{
 		trans_2 = GPIO_PIN_SET;
 	}
-	if(digital_outputs_msg.enable_outputs & (1<<7))
+	if(digital_outputs_msg.enable_outputs & (1<<15))
 	{
 		trans_3 = GPIO_PIN_SET;
 	}
