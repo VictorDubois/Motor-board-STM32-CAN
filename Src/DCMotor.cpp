@@ -66,10 +66,10 @@ DCMotor::DCMotor(DCMotorHardware* a_hardware, MCP3002* a_current_reader) : hardw
 	pid_d = 0.0197;
 
 	m_linear_pid_p = 0.15f;
-	m_linear_pid_i = 0.15f;
+	m_linear_pid_i = 0.3f;
 	m_linear_pid_d = 0.0f;
-	m_angular_pid_p = 0.1f;
-	m_angular_pid_i = 0.13f;
+	m_angular_pid_p = 0.20f;
+	m_angular_pid_i = 0.10f;
 	m_angular_pid_d = 0.0f;
 
 	last_update_time = HAL_GetTick();
