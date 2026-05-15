@@ -16,7 +16,7 @@
 #define M_R             1
 #define NB_MOTORS 		2
 
-#define SAMPLING_USEC   10000 //microseconds
+#define SAMPLING_USEC   3334 //microseconds (~300Hz)
 #define SAMPLING_PER_SEC 1e6/SAMPLING_USEC // Hz
 
 #define SPEED_MAX       20 * 2048// Not used anymore //2048 // ticks per s = 20 * 0.5tr/s
