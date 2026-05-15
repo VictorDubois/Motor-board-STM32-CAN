@@ -365,6 +365,13 @@ void DCMotor::control_ramp_speed_polar(void) {
 
 	uint32_t current_time = HAL_GetTick(); // in ms
 	dt = (current_time - last_update_time)/1000.f; // is seconds
+
+	if (dt <= 0.0f)
+	{
+		// SI HAL_GetTick() n'est pas assez précis
+		dt = SAMPLING_USEC / 1e6f;
+	}
+
 	last_update_time = current_time;
 
 	linear_speed_integ_error += linear_speed_error * dt; // dt is included in pid_i because it is constant. If we change dt, pid_i must be scaled
