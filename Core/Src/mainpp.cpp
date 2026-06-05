@@ -355,7 +355,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 
 DCMotorHardware MotorBoard::motorsHardware;
 DCMotor MotorBoard::motors;
-MCP3002 MotorBoard::currentReader;
+CurrentReader MotorBoard::currentReader;
 volatile long long MotorBoard::message_counter = 0;
 volatile long MotorBoard::last_encoder_left = 0;
 volatile long MotorBoard::last_encoder_right = 0;
@@ -399,9 +399,9 @@ MotorBoard::MotorBoard(TIM_HandleTypeDef* a_motorTimHandler, UART_HandleTypeDef 
 	motorsHardware = DCMotorHardware(TIM2, TIM1, a_motorTimHandler, TIM_CHANNEL_2, a_motorTimHandler, TIM_CHANNEL_1, hcan);
 
 #ifdef USE_MCP3002
-	currentReader = MCP3002();
+	currentReader = CurrentReader();
 #else
-	currentReader = MCP3002(hadc2);
+	currentReader = CurrentReader(hadc2);
 #endif
 	motors = DCMotor(&motorsHardware, &currentReader);
 

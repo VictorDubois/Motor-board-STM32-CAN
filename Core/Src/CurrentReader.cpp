@@ -8,7 +8,7 @@
 	http://learn.adafruit.com/send-raspberry-pi-data-to-cosm/python-script
 */
 
-#include <MCP3002.h>
+#include <CurrentReader.h>
 
 
 extern "C" {
@@ -18,7 +18,7 @@ extern "C" {
 #define INVERTED_HIGH LOW
 #define INVERTED_LOW HIGH
 #ifdef USE_MCP3002
-MCP3002::MCP3002() {
+CurrentReader::CurrentReader() {
 	m_miso_gpio_bank =  SPI_MISO_GPIO_Port;
 	m_miso_gpio = SPI_MISO_Pin;
 	m_mosi_gpio_bank =  SPI_MOSI_GPIO_Port;
@@ -29,13 +29,13 @@ MCP3002::MCP3002() {
 	m_cs_gpio = SPI_CS_Pin;
 }
 #else
-	MCP3002::MCP3002() {}
-	MCP3002::MCP3002(ADC_HandleTypeDef* a_hadc2): m_hadc2(a_hadc2) {}
+	CurrentReader::CurrentReader() {}
+	CurrentReader::CurrentReader(ADC_HandleTypeDef* a_hadc2): m_hadc2(a_hadc2) {}
 #endif
 
 
 
-int MCP3002::readCurrent(int adcnum) {
+int CurrentReader::readCurrent(int adcnum) {
 
 
 	//return 20;
@@ -56,7 +56,7 @@ int MCP3002::readCurrent(int adcnum) {
 
 
 // read SPI data from MCP3002 chip, 8 possible adc's (0 thru 7)
-int MCP3002::readADC(int adcnum) {
+int CurrentReader::readADC(int adcnum) {
 	ADC_ChannelConfTypeDef sConfig = {0};
 	sConfig.Channel = ADC_CHANNEL_3;
 	  sConfig.Rank = ADC_REGULAR_RANK_1;

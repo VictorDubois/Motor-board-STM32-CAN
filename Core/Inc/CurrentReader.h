@@ -40,17 +40,17 @@
 
 #define ONE_MILLIAMP (ONE_AMP / 1000.f)
 
-#ifndef MCP3002_H_
-#define MCP3002_H_
+#ifndef CurrentReader_H_
+#define CurrentReader_H_
 #include "stm32g4xx_hal.h"
 #define CURRENT_READER_OFFLINE 2048
 
-class MCP3002
+class CurrentReader
 {
   public:
-    MCP3002();
+    CurrentReader();
 #ifndef USE_MCP3002
-    MCP3002(ADC_HandleTypeDef* a_hadc2);
+    CurrentReader(ADC_HandleTypeDef* a_hadc2);
   private:
     ADC_HandleTypeDef* m_hadc2;
 #endif
@@ -87,4 +87,4 @@ class MCP3002
 	uint16_t m_cs_gpio;
 };
 
-#endif /* MCP3002_H_ */
+#endif /* CurrentReader_H_ */

@@ -8,8 +8,8 @@
 #ifndef DCMOTOR_H_
 #define DCMOTOR_H_
 
+#include <CurrentReader.h>
 #include "DCMotorHardware.h"
-#include "MCP3002.h"
 #include "stm32g4xx_hal.h"
 
 #define M_L             0
@@ -40,7 +40,7 @@ class DCMotor
 
 public:
 	DCMotor();
-	DCMotor(DCMotorHardware* hardware, MCP3002* current_reader);
+	DCMotor(DCMotorHardware* hardware, CurrentReader* current_reader);
 	~DCMotor();
 
 	/**
@@ -167,7 +167,7 @@ private:
 	float dt;
 	volatile int32_t speed_order[NB_MOTORS];
 	DCMotorHardware* hardware;
-	MCP3002* current_reader;
+	CurrentReader* current_reader;
 
 	volatile int32_t last_position[NB_MOTORS];
 

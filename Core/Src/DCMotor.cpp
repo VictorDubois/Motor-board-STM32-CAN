@@ -55,7 +55,7 @@ int32_t diffWithFixOverflow(int32_t after, int32_t before)
     return after - before;
 }
 
-DCMotor::DCMotor(DCMotorHardware* a_hardware, MCP3002* a_current_reader) : hardware(a_hardware), current_reader(a_current_reader) {
+DCMotor::DCMotor(DCMotorHardware* a_hardware, CurrentReader* a_current_reader) : hardware(a_hardware), current_reader(a_current_reader) {
 	resetMotors();
 	max_speed = SPEED_MAX;
 	max_speed_delta = ACCEL_MAX;

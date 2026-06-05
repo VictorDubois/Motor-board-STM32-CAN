@@ -20,10 +20,10 @@
 #include <krabi_msgs/motors_cmd.h>
 #include <krabi_msgs/SetOdom.h>*/
 #include "msgs.h"
-#include <MCP3002.h>
 #include "stm32g4xx_hal.h"
 #include "DCMotor.h"
 #include <CanStruct/can_structs.h>
+#include <CurrentReader.h>
 
 #define UPDATE_FREQ 10
 #define MS_BETWEEN_UPDATES 1000/UPDATE_FREQ
@@ -80,7 +80,7 @@ private:
 	//static ros::NodeHandle nh;
 	static DCMotorHardware motorsHardware;
 	static DCMotor motors;
-	static MCP3002 currentReader;
+	static CurrentReader currentReader;
 	static volatile int32_t last_encoder_left;
 	static volatile int32_t last_encoder_right;
 
