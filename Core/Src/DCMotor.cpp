@@ -478,13 +478,13 @@ void DCMotor::set_derivative(float linear_d, float angular_d)
 
 void DCMotor::set_max_current(float a_max_current)
 {
-	max_current = a_max_current * ONE_AMP;
+	max_current = a_max_current * current_reader->getOneAmp();
 }
 
 void DCMotor::set_max_current(float a_max_current_left, float a_max_current_right)
 {
-	max_currents[M_L] = a_max_current_left * ONE_AMP;
-	max_currents[M_R] = a_max_current_right * ONE_AMP;
+	max_currents[M_L] = a_max_current_left * current_reader->getOneAmp();
+	max_currents[M_R] = a_max_current_right * current_reader->getOneAmp();
 }
 
 void DCMotor::set_enable_motors(bool a_enable_motors)

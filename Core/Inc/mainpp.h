@@ -80,7 +80,7 @@ private:
 	//static ros::NodeHandle nh;
 	static DCMotorHardware motorsHardware;
 	static DCMotor motors;
-	static CurrentReader currentReader;
+	static CurrentReaderCan currentReader;
 	static volatile int32_t last_encoder_left;
 	static volatile int32_t last_encoder_right;
 

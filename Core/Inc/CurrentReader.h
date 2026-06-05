@@ -8,38 +8,6 @@
 	http://learn.adafruit.com/send-raspberry-pi-data-to-cosm/python-script
 */
 
-// Mesures :
-// MCP3002
-// 105 <=> 360mA
-// 69 <=> 240mA
-// 53 <=> 186mA
-// 77 <=> 267mA
-// 89 <=> 301mA
-// 137 <=> 480mA
-
-// STM32 ADC
-// 20 <=> 200mA
-// "ONE_VOLT" factor = measure/("ONE_AMP" factor * real current)
-#define USE_C620_CURRENT
-
-#ifdef USE_MCP3002
-	#define ONE_VOLT        774.f // MCP3002 adc value for one volt
-#else
-	#define ONE_VOLT        265.f // STM32 adc value for one volt
-#endif
-
-#ifdef USE_C620_CURRENT
-//4000 = 0.80A sur deux moteurs
-//2000 = 0.25A sur deux moteurs,
-//1050 = 0.133A sur deux moteurs
-//300  = 0.09A sur deux moteurs (arrêt)
-	#define ONE_AMP         1700.f // 1700 arbitrary C620 value that lead to reasonable threshold for 10A. @TODO calibrate
-#else
-	#define ONE_AMP         (0.377f*ONE_VOLT) // Volt to amp conversion of LMD18200
-#endif
-
-#define ONE_MILLIAMP (ONE_AMP / 1000.f)
-
 #ifndef CurrentReader_H_
 #define CurrentReader_H_
 #include "stm32g4xx_hal.h"
@@ -48,21 +16,56 @@
 class CurrentReader
 {
   public:
-    CurrentReader();
-#ifndef USE_MCP3002
-    CurrentReader(ADC_HandleTypeDef* a_hadc2);
-  private:
-    ADC_HandleTypeDef* m_hadc2;
-#endif
+    CurrentReader(){};
+    ~CurrentReader(){};
 
-#ifdef USE_C620_CURRENT
-    int16_t m_current_left = 0;
-    int16_t m_current_right = 0;
-#endif
   public:
-    int readADC(int adcnum);
+    virtual int readCurrent(int adcnum);
+    void setCurrent(int adcnum, int16_t a_current){};
+    virtual constexpr float getOneAmp();
+    constexpr float getOneMilliAmp() { return getOneAmp()/1000.f; };
+};
+
+class CurrentReaderMCP3002: public CurrentReader
+{
+  public:
+	CurrentReaderMCP3002(){};
     int readCurrent(int adcnum);
-#ifdef USE_C620_CURRENT
+    constexpr float getOneAmp() {
+    	// MCP3002
+    	// 105 <=> 360mA
+    	// 69 <=> 240mA
+    	// 53 <=> 186mA
+    	// 77 <=> 267mA
+    	// 89 <=> 301mA
+    	// 137 <=> 480mA
+    	constexpr float l_one_volt = 774.f; // MCP3002 adc value for one volt
+    	return 0.377f*l_one_volt; // Volt to amp conversion of LMD18200
+    }
+  private:
+	int readADC(int a_adc_num);
+};
+
+class CurrentReaderAdc: public CurrentReader
+{
+public:
+	CurrentReaderAdc(){};
+	CurrentReaderAdc(ADC_HandleTypeDef* a_ADC_Handle);
+    int readCurrent(int adcnum);
+    constexpr float getOneAmp() {
+    	// 20 <=> 200mA
+		constexpr float l_one_volt = 265.f; // STM32 adc value for one volt
+		return 0.377f*l_one_volt; // Volt to amp conversion of LMD18200
+	}
+private:
+	int readADC(int a_adc_num);
+	ADC_HandleTypeDef* m_ADC_Handle;
+};
+
+class CurrentReaderCan: public CurrentReader
+{
+public:
+	CurrentReaderCan(){};
     void setCurrent(int adcnum, int16_t a_current)
     {
     	if (adcnum)
@@ -74,17 +77,18 @@ class CurrentReader
     		m_current_right = a_current;
     	}
     }
-;
-#endif
-  private:
-    GPIO_TypeDef* m_miso_gpio_bank;
-	uint16_t m_miso_gpio;
-	GPIO_TypeDef* m_mosi_gpio_bank;
-	uint16_t m_mosi_gpio;
-	GPIO_TypeDef* m_clk_bank;
-	uint16_t m_clk_gpio;
-	GPIO_TypeDef* m_cs_gpio_bank;
-	uint16_t m_cs_gpio;
+    int readCurrent(int adcnum);
+    constexpr float getOneAmp() {
+    	//4000 = 0.80A sur deux moteurs
+    	//2000 = 0.25A sur deux moteurs,
+    	//1050 = 0.133A sur deux moteurs
+    	//300  = 0.09A sur deux moteurs (arrêt)
+    	return 1700.f; // 1700 arbitrary C620 value that lead to reasonable threshold for 10A. @TODO calibrate
+    };
+private:
+    int16_t m_current_left = 0;
+    int16_t m_current_right = 0;
 };
+
 
 #endif /* CurrentReader_H_ */

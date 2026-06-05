@@ -17,46 +17,32 @@ extern "C" {
 
 #define INVERTED_HIGH LOW
 #define INVERTED_LOW HIGH
-#ifdef USE_MCP3002
-CurrentReader::CurrentReader() {
-	m_miso_gpio_bank =  SPI_MISO_GPIO_Port;
-	m_miso_gpio = SPI_MISO_Pin;
-	m_mosi_gpio_bank =  SPI_MOSI_GPIO_Port;
-	m_mosi_gpio =  SPI_MOSI_Pin;
-	m_clk_bank = SPI_CLK_GPIO_Port;
-	m_clk_gpio = SPI_CLK_Pin;
-	m_cs_gpio_bank = SPI_CS_GPIO_Port;
-	m_cs_gpio = SPI_CS_Pin;
+
+CurrentReaderAdc::CurrentReaderAdc(ADC_HandleTypeDef* a_ADC_Handle): m_ADC_Handle(a_ADC_Handle)
+{}
+
+
+int CurrentReaderMCP3002::readCurrent(int adcnum) {
+	return CURRENT_READER_OFFLINE - this->readADC(adcnum);
 }
-#else
-	CurrentReader::CurrentReader() {}
-	CurrentReader::CurrentReader(ADC_HandleTypeDef* a_hadc2): m_hadc2(a_hadc2) {}
-#endif
 
-
-
-int CurrentReader::readCurrent(int adcnum) {
-
-
-	//return 20;
-#ifdef USE_MCP3002
-	return 2048 - readADC(adcnum);
-
-#else
-	#ifdef USE_C620_CURRENT
-		if (adcnum)
-		{
-			return m_current_right;
-		}
-		return m_current_left;
-	#endif
+int CurrentReaderAdc::readCurrent(int adcnum) {
 	return readADC(adcnum);
-#endif
+}
+
+int CurrentReaderCan::readCurrent(int adcnum)
+{
+	if (adcnum)
+	{
+		return m_current_right;
+	}
+	return m_current_left;
 }
 
 
 // read SPI data from MCP3002 chip, 8 possible adc's (0 thru 7)
-int CurrentReader::readADC(int adcnum) {
+int CurrentReaderAdc::readADC(int adcnum)
+{
 	ADC_ChannelConfTypeDef sConfig = {0};
 	sConfig.Channel = ADC_CHANNEL_3;
 	  sConfig.Rank = ADC_REGULAR_RANK_1;
@@ -70,25 +56,29 @@ int CurrentReader::readADC(int adcnum) {
 			sConfig.Channel = ADC_CHANNEL_4;
 	  }
 
-	  if (HAL_ADC_ConfigChannel(m_hadc2, &sConfig) != HAL_OK)
+	  if (HAL_ADC_ConfigChannel(m_ADC_Handle, &sConfig) != HAL_OK)
 	  {
 	    Error_Handler();
 	  }
-	  HAL_ADC_Start(m_hadc2);
+	  HAL_ADC_Start(m_ADC_Handle);
 
-	  int32_t ret_code = HAL_ADC_PollForConversion(m_hadc2, 100);
+	  int32_t ret_code = HAL_ADC_PollForConversion(m_ADC_Handle, 100);
 
 	  if (ret_code == HAL_TIMEOUT)
 	  {
-		  HAL_ADC_Stop(m_hadc2);
+		  HAL_ADC_Stop(m_ADC_Handle);
 		  return -1;
 	  }
 
-	  uint32_t adc_val = HAL_ADC_GetValue(m_hadc2);
+	  uint32_t adc_val = HAL_ADC_GetValue(m_ADC_Handle);
 
-	  HAL_ADC_Stop(m_hadc2);
+	  HAL_ADC_Stop(m_ADC_Handle);
 
 	  return adc_val;
+}
+
+int CurrentReaderMCP3002::readADC(int adcnum)
+{
 #ifdef USE_MCP3002
   if ((adcnum > 7) || (adcnum < 0)) return -1; // Wrong adc address return -1
 

@@ -355,7 +355,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 
 DCMotorHardware MotorBoard::motorsHardware;
 DCMotor MotorBoard::motors;
-CurrentReader MotorBoard::currentReader;
+CurrentReaderCan MotorBoard::currentReader;
 volatile long long MotorBoard::message_counter = 0;
 volatile long MotorBoard::last_encoder_left = 0;
 volatile long MotorBoard::last_encoder_right = 0;
@@ -399,9 +399,10 @@ MotorBoard::MotorBoard(TIM_HandleTypeDef* a_motorTimHandler, UART_HandleTypeDef 
 	motorsHardware = DCMotorHardware(TIM2, TIM1, a_motorTimHandler, TIM_CHANNEL_2, a_motorTimHandler, TIM_CHANNEL_1, hcan);
 
 #ifdef USE_MCP3002
-	currentReader = CurrentReader();
+	currentReader = CurrentReaderMCP3002();
 #else
-	currentReader = CurrentReader(hadc2);
+	//currentReader = CurrentReaderAdc(hadc2);
+	currentReader = CurrentReaderCan();
 #endif
 	motors = DCMotor(&motorsHardware, &currentReader);
 
@@ -544,8 +545,8 @@ void MotorBoard::resetUart()
 void MotorBoard::updateCurrent()
 {
 	TxHeader.Identifier = CAN::can_ids::CURRENT_LIMIT;
-	int16_t left_current_mA = motors.get_accumulated_current(M_L) / ONE_MILLIAMP; // 2 bytes
-	int16_t right_current_mA = motors.get_accumulated_current(M_R) / ONE_MILLIAMP; // 2 bytes
+	int16_t left_current_mA = motors.get_accumulated_current(M_L) / currentReader.getOneMilliAmp(); // 2 bytes
+	int16_t right_current_mA = motors.get_accumulated_current(M_R) / currentReader.getOneMilliAmp(); // 2 bytes
 	uint16_t left_wheel_unstalled_in_ms = motors.get_remaining_time_stopped(M_L); // 2 bytes Nb of ms until the robot's left wheel is allowed to move again
 	uint16_t right_wheel_unstalled_in_ms = motors.get_remaining_time_stopped(M_R);
 
