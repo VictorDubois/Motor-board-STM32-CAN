@@ -114,45 +114,7 @@ void uartBroker::receiveUART(UART_HandleTypeDef *huart){
 		test_message_received++;
 		memcpy(rx_line_buffer, rx_buffer, UART_MSG_SIZE);
 		read_serial();
-
-		/*int dma_buffer_offset = 0;
-
-		int i = 0;
-		while (i < RX_BUFFER_SIZE)
-		{
-			rx_line_buffer[offset_message_already_received + i] = rx_buffer[i];
-
-			if (rx_buffer[i] == '\n' || rx_buffer[i] == '\r')
-			{
-				break;
-			}
-			else
-			{
-				i++;
-			}
-		}
-
-		if (rx_buffer[i] == '\n' || rx_buffer[i] == '\r' ||
-				(offset_message_already_received + i > 1 && rx_line_buffer[offset_message_already_received + i-1] == '\\' && (rx_line_buffer[offset_message_already_received + i] == 'n' || rx_line_buffer[offset_message_already_received + i] == 'r' )))
-		{
-			// Message received !
-			read_serial();
-			offset_message_already_received = 0;
-		}
-		else
-		{
-			offset_message_already_received += i;
-
-			dma_buffer_offset += i;
-			// Ensure the buffer does not overflow
-			if (offset_message_already_received+RX_BUFFER_SIZE >= sizeof(rx_line_buffer)) {
-				// Buffer overflow, handle error or reset the buffer
-				offset_message_already_received = 0;
-			}
-		}*/
 	}
-
-
 }
 
 void uartBroker::float_to_hex(const float a_value, uint8_t* a_out, const int start_pos)

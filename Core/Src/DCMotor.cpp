@@ -61,6 +61,7 @@ DCMotor::DCMotor(DCMotorHardware* a_hardware, CurrentReader* a_current_reader) :
 	max_speed_delta = ACCEL_MAX;
 	set_max_current(0.5f);
 	set_max_current(10.f, 10.f);
+	
 	pid_p = 0.0222;
 	pid_i = 0.00625;
 	pid_d = 0.0197;
@@ -105,7 +106,7 @@ DCMotor::DCMotor(DCMotorHardware* a_hardware, CurrentReader* a_current_reader) :
 	angular_speed_integ_error = 0;
 
 	m_enable_motors = false;
-	dt=0.42f;
+	dt=0.01f;
 }
 
 void DCMotor::resetEncodersCounter()

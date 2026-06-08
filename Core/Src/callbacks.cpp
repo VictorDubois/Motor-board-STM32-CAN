@@ -11,16 +11,12 @@
 
 #include <CanStruct/can_structs.h>
 #include <uartBroker.h>
-#include "msgs.h"
 
 
 #include "constants.h"
 
 #include "main.h" // for pins definitions
 #include "mainpp.h" // for MotorBoard
-
-//#include "stm32g4xx_hal.h"
-
 
 void motors_cmd_cb(const CAN::MotorBoardCmdInput &motors_cmd_msg)
 {

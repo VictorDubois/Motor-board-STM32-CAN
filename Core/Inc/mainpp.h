@@ -8,7 +8,6 @@
 #ifndef MAINPP_H_
 #define MAINPP_H_
 
-#include "msgs.h"
 #include "stm32g4xx_hal.h"
 #include "DCMotor.h"
 #include <CanStruct/can_structs.h>
