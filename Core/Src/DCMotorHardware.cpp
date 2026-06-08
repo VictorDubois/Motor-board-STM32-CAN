@@ -69,7 +69,13 @@ uint32_t DCMotorHardware::getMilliSecondsElapsed() {
 	return HAL_GetTick();
 }
 
-void DCMotorHardware::setPWM(const int32_t pwm_left, const int32_t pwm_right) {
+
+void DCMotorHardware::sendMotorSpeed(const int32_t pwm_left, const int32_t pwm_right) {
+	sendMotorSpeedCAN(pwm_left, pwm_right);
+	sendMotorSpeedPWM(pwm_left, pwm_right);
+}
+
+void DCMotorHardware::sendMotorSpeedCAN(const int32_t pwm_left, const int32_t pwm_right) {
 	// CAN
 	FDCAN_TxHeaderTypeDef TxHeader;
 	uint8_t TxData[8];
@@ -95,9 +101,9 @@ void DCMotorHardware::setPWM(const int32_t pwm_left, const int32_t pwm_right) {
 	TxData[6] = 0 & 0xFF;
 	TxData[7] = 0 & 0xFF;
 	CAN_Enqueue(&TxHeader, TxData);
+}
 
-	// PWM
-
+void DCMotorHardware::sendMotorSpeedPWM(const int32_t pwm_left, const int32_t pwm_right) {
 	// Write dir according to pwm sign
 	if (pwm_left > 0) {
 		HAL_GPIO_WritePin(dir_left_gpio_bank, dir_left_gpio, GPIO_PIN_SET);

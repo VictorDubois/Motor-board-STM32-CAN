@@ -43,7 +43,10 @@ public:
 	 * @param pwm_left the pwm intensity for motor left
 	 * @param pwm_right the pwm intensity for motor right
 	 */
-	void setPWM(int32_t pwm_left, int32_t pwm_right);
+	void sendMotorSpeed(int32_t pwm_left, int32_t pwm_right);
+	void sendMotorSpeedCAN(const int32_t pwm_left, const int32_t pwm_right);
+	void sendMotorSpeedPWM(const int32_t pwm_left, const int32_t pwm_right);
+
 
 	/**
 	 * @brief returns the number of milliseconds elapsed since boot

@@ -25,14 +25,10 @@ int32_t fixOverflow(int16_t a_after, int32_t before)
 	int32_t after = a_after;
     while (after - before > TICKS_half_OVERFLOW)
     {
-        // printf("before (%ld) - after (%ld) > TICKS_half_OVERFLOW (%d). Returning %ld\n\n\n",
-        // before, after, TICKS_half_OVERFLOW, after - before - TICKS_OVERFLOW);
         after -= TICKS_OVERFLOW;
     }
     while (after - before < -TICKS_half_OVERFLOW)
     {
-        // printf("after (%ld) - before (%ld) < -TICKS_half_OVERFLOW (%d). Returning %ld\n\n\n",
-        // after, before, -TICKS_half_OVERFLOW, after - before + TICKS_OVERFLOW);
         after += TICKS_OVERFLOW;
     }
     return after;
@@ -42,14 +38,10 @@ int32_t diffWithFixOverflow(int32_t after, int32_t before)
 {
     if (after - before > TICKS_half_OVERFLOW)
     {
-        // printf("before (%ld) - after (%ld) > TICKS_half_OVERFLOW (%d). Returning %ld\n\n\n",
-        // before, after, TICKS_half_OVERFLOW, after - before - TICKS_OVERFLOW);
         return after - before - TICKS_OVERFLOW;
     }
     if (after - before < -TICKS_half_OVERFLOW)
     {
-        // printf("after (%ld) - before (%ld) < -TICKS_half_OVERFLOW (%d). Returning %ld\n\n\n",
-        // after, before, -TICKS_half_OVERFLOW, after - before + TICKS_OVERFLOW);
         return after - before + TICKS_OVERFLOW;
     }
     return after - before;
@@ -177,13 +169,19 @@ void DCMotor::resetMotors() {
 		resetMotor(i);
 	}
 
-	hardware->setPWM(0, 0);
+	hardware->sendMotorSpeed(0, 0);
 }
 
 DCMotor::DCMotor() {}
 
 DCMotor::~DCMotor() {}
 
+/**
+ * Computes the (simplified) integral of the current, over 1s
+ * If it goes above a threshold, stops the motor for some time
+ * There is one short threshold (1s), per motor (used for re-calibration against a wall, for instance)
+ * And a longer threshold (3s), used for collisions
+ */
 void DCMotor::overCurrentProtection() {
 	for(int i = 0; i < NB_MOTORS; i++){
 		current[i] = current_reader->readCurrent(i);
@@ -236,16 +234,16 @@ void DCMotor::update() {
 	control_ramp_speed_polar();
 
 	if (!m_enable_motors) {
-		hardware->setPWM(0, 0);
+		hardware->sendMotorSpeed(0, 0);
 		return;
 	}
 
 	if (override_pwm)
 	{
-		hardware->setPWM(override_pwms[M_L], override_pwms[M_R]);
+		hardware->sendMotorSpeed(override_pwms[M_L], override_pwms[M_R]);
 	}
 	else {
-		hardware->setPWM(voltage[M_L], voltage[M_R]);
+		hardware->sendMotorSpeed(voltage[M_L], voltage[M_R]);
 	}
 }
 
@@ -344,7 +342,11 @@ void DCMotor::limitLinearFirst(int32_t& linear, int32_t& angular, const int32_t 
 	linear = LIMIT(linear, max - abs(angular), -max + abs(angular));
 }
 
-
+/**
+ * PID in polar:
+ * One PID for the linear speed
+ * One PID for the angular speed
+ */
 void DCMotor::control_ramp_speed_polar(void) {
 	float linear_pid_p = m_linear_pid_p;
 	float linear_pid_i = m_linear_pid_i;
@@ -353,22 +355,16 @@ void DCMotor::control_ramp_speed_polar(void) {
 	float angular_pid_i = m_angular_pid_i;
 	float angular_pid_d = m_angular_pid_d;
 
-
-
 	int32_t linear_speed_error = linear_speed_order - linear_speed;
 	int32_t angular_speed_error = angular_speed_order - angular_speed;
 
 	limitLinearFirst(linear_speed_error, angular_speed_error, max_speed_delta);
 
-
-	//linear_refined_speed_order
-
-
 	uint32_t current_time = HAL_GetTick(); // in ms
 	dt = (current_time - last_update_time)/1000.f; // is seconds
 	last_update_time = current_time;
 
-	linear_speed_integ_error += linear_speed_error * dt; // dt is included in pid_i because it is constant. If we change dt, pid_i must be scaled
+	linear_speed_integ_error += linear_speed_error * dt;
 
 
 	int32_t linear_voltage =
@@ -378,7 +374,7 @@ void DCMotor::control_ramp_speed_polar(void) {
 	linear_last_speed_error = linear_speed_error;
 
 
-	angular_speed_integ_error += angular_speed_error* dt; // dt is included in pid_i because it is constant. If we change dt, pid_i must be scaled
+	angular_speed_integ_error += angular_speed_error* dt;
 
 	int32_t angular_voltage =
 		 (angular_speed_error * angular_pid_p +
@@ -387,7 +383,7 @@ void DCMotor::control_ramp_speed_polar(void) {
 	angular_last_speed_error = angular_speed_error;
 
 
-	voltage[M_L] = linear_voltage + angular_voltage;//@todo check this
+	voltage[M_L] = linear_voltage + angular_voltage;
 	voltage[M_R] = linear_voltage - angular_voltage;
 
 	for(int i = 0; i < NB_MOTORS; i++){
@@ -395,6 +391,12 @@ void DCMotor::control_ramp_speed_polar(void) {
 	}
 }
 
+
+/**
+ * PID per-motor:
+ * One PID for the left motor
+ * One PID for the right motor
+ */
 void DCMotor::control_ramp_speed(void) {
     //if( stopped ) return;
 
@@ -494,7 +496,6 @@ void DCMotor::set_enable_motors(bool a_enable_motors)
 
 	if (!m_enable_motors)
 	{
-		//resetMotors();
 		resetMotor(M_L);
 		resetMotor(M_R);
 	}
