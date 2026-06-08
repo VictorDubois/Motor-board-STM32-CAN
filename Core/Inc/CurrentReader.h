@@ -22,8 +22,8 @@ class CurrentReader
   public:
     virtual int readCurrent(int adcnum);
     void setCurrent(int adcnum, int16_t a_current){};
-    virtual constexpr float getOneAmp();
-    constexpr float getOneMilliAmp() { return getOneAmp()/1000.f; };
+    virtual float getOneAmp();
+    float getOneMilliAmp() { return getOneAmp()/1000.f; };
 };
 
 class CurrentReaderMCP3002: public CurrentReader

@@ -14,6 +14,7 @@ extern "C" {
 #include <string.h>
 #include <string>
 #include "math.h"
+#include <inttypes.h>
 
 #define UART_MSG_SIZE 1+ 8*10 + 1
 uint8_t rx_buffer[UART_MSG_SIZE];
@@ -259,7 +260,8 @@ void float_to_hex(const float a_value, uint8_t* a_out, const int start_pos)
 {
     uint32_t floatHex;
     memcpy(&floatHex, &a_value, sizeof(a_value));
-	sprintf((char*)(a_out + start_pos), "%08X", floatHex); // Convert to hexadecimal string
+    sprintf((char *)(a_out + start_pos), "%08" PRIX32, floatHex); // Convert to hexadecimal string
+
 }
 
 void publish_encoders(UART_HandleTypeDef * huart2)
