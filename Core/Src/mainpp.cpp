@@ -125,9 +125,9 @@ float get_orientation_float(int32_t encoder1, int32_t encoder2, float offset)
 }
 
 /*
-        Given current value of both encoders
-        return the linear dist by approximating it as the average of both wheels' linear distances.
-        Static variables are used to keep last value of encoders.
+	Given current value of both encoders
+	return the linear dist by approximating it as the average of both wheels' linear distances.
+	Static variables are used to keep last value of encoders.
 */
 float MotorBoard::compute_linear_dist(const long encoder1, const long encoder2)
 {
@@ -238,20 +238,6 @@ void MotorBoard::update() {
 	s_uart_broker.publish_odom_lighter(huart2);
 
 	/* Set the data to be transmitted */
-	/*TxHeader.Identifier = CAN::can_ids::ODOMETRY_XY;
-    int32_t poseX_mm = X * 1000;
-    int32_t poseY_mm = Y * 1000;
-
-    TxData[0] = (poseX_mm >> 24) & 0xFF;
-    TxData[1] = (poseX_mm >> 16) & 0xFF;
-    TxData[2] = (poseX_mm >> 8) & 0xFF;
-    TxData[3] = (poseX_mm) & 0xFF;
-    TxData[4] = (poseY_mm >>24) & 0xFF;
-    TxData[5] = (poseY_mm >> 16) & 0xFF;
-    TxData[6] = (poseY_mm >> 8) & 0xFF;
-    TxData[7] = (poseY_mm) & 0xFF;
-	CAN_Enqueue(&TxHeader, TxData);*/
-
 	TxHeader.Identifier = CAN::can_ids::ODOMETRY_XYum;
 	int32_t poseX_um = X * 1000000;
 	int32_t poseY_um = Y * 1000000;
@@ -280,23 +266,6 @@ void MotorBoard::update() {
 	TxData[6] = (currentRight >> 8) & 0xFF;
 	TxData[7] = (currentRight) & 0xFF;
 	CAN_Enqueue(&TxHeader, TxData);
-
-
-	/*TxHeader.Identifier = CAN::can_ids::ODOMETRY_XY_FLOAT;
-	memcpy(TxData, &(X), sizeof(float));
-	memcpy(TxData + sizeof(float), &(Y), sizeof(float));
-	CAN_Enqueue(&TxHeader, TxData);
-
-	TxHeader.Identifier = CAN::can_ids::ODOMETRY_THETA;
-	memcpy(TxData, &(current_theta_rad), sizeof(float));
-	CAN_Enqueue(&TxHeader, TxData);*/
-
-
-	/*TxHeader.Identifier = CAN::can_ids::ODOMETRY_SPEED_FLOAT;
-	memcpy(TxData, &(speedVx), sizeof(float));
-	memcpy(TxData+ sizeof(float), &(speedWz), sizeof(float));
-	CAN_Enqueue(&TxHeader, TxData);*/
-
 
 
 	if (false && message_counter%100 == 0)
@@ -388,33 +357,26 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 	}
 
     else if ((RxHeader.Identifier == CAN::can_ids::CMD_VEL) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
-        {
-        	CAN::CmdVelFloat l_cmd_vel;
+	{
+		CAN::CmdVelFloat l_cmd_vel;
 
-            int32_t linear_x_µm_s = 0;
-            int32_t angular_z_µrad_s = 0;
-            linear_x_µm_s |= RxData[0] << 24;
-            linear_x_µm_s |= RxData[1] << 16;
-            linear_x_µm_s |= RxData[2] << 8;
-            linear_x_µm_s |= RxData[3] ;
+		int32_t linear_x_µm_s = 0;
+		int32_t angular_z_µrad_s = 0;
+		linear_x_µm_s |= RxData[0] << 24;
+		linear_x_µm_s |= RxData[1] << 16;
+		linear_x_µm_s |= RxData[2] << 8;
+		linear_x_µm_s |= RxData[3] ;
 
-            angular_z_µrad_s |= RxData[4] << 24;
-            angular_z_µrad_s |= RxData[5] << 16;
-            angular_z_µrad_s |= RxData[6] << 8;
-            angular_z_µrad_s |= RxData[7] ;
+		angular_z_µrad_s |= RxData[4] << 24;
+		angular_z_µrad_s |= RxData[5] << 16;
+		angular_z_µrad_s |= RxData[6] << 8;
+		angular_z_µrad_s |= RxData[7] ;
 
-            //l_cmd_vel.linear_x_m = linear_x_µm_s/(10000000.0f); // before fix
-            //l_cmd_vel.angular_z_rad = angular_z_µrad_s/(10000000.0f); // before fix
-            l_cmd_vel.linear_x_m = linear_x_µm_s/(1000000.0f);
-            l_cmd_vel.angular_z_rad = angular_z_µrad_s/(1000000.0f);
+		l_cmd_vel.linear_x_m = linear_x_µm_s/(1000000.0f);
+		l_cmd_vel.angular_z_rad = angular_z_µrad_s/(1000000.0f);
 
-            //l_cmd_vel.angular_z_rad /= 2.4;// Magic factor :'(
-        	//@todo decode
-            //memcpy(&(l_cmd_vel.linear_x_m), RxData, sizeof(float));
-            //memcpy(&(l_cmd_vel.angular_z_rad), RxData + sizeof(float), sizeof(float));
-
-            MotorBoard::getDCMotor().set_speed_order(metersToTicks(l_cmd_vel.linear_x_m), radsToTicks(-l_cmd_vel.angular_z_rad));
-        }
+		MotorBoard::getDCMotor().set_speed_order(metersToTicks(l_cmd_vel.linear_x_m), radsToTicks(-l_cmd_vel.angular_z_rad));
+	}
 
     else if ((RxHeader.Identifier == CAN::can_ids::MOTOR_BOARD_CMD_INPUT) && (RxHeader.IdType == FDCAN_STANDARD_ID) && (RxHeader.DataLength == FDCAN_DLC_BYTES_8))
 	{
@@ -533,8 +495,6 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 	MotorBoard myboard = MotorBoard(a_motorTimHandler, huart2, hcan, hadc2);
 
 	__HAL_UART_CLEAR_OREFLAG(huart2); // Not sure if actually needed
-
-
 
 	// CAN sandbox, from https://community.st.com/t5/stm32-mcus/how-to-use-fdcan-to-create-a-simple-communication-with-a-basic/ta-p/671766
 
