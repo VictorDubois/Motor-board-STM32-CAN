@@ -11,340 +11,27 @@
 extern "C" {
 	#include "main.h"
 }
-#include <string.h>
-#include <string>
+
 #include "math.h"
-#include <inttypes.h>
 
-#define UART_MSG_SIZE 1+ 8*10 + 1
-uint8_t rx_buffer[UART_MSG_SIZE];
-uint8_t rx_line_buffer[UART_MSG_SIZE];
-uint8_t tx_e_line_buffer[UART_MSG_SIZE];
-uint8_t tx_o_line_buffer[UART_MSG_SIZE];
-unsigned int offset_message_already_received = 0;
-int nb_messages_received = 0;
-float test_message_received = 0;
-unsigned int nb_updates_without_message = 0;
+#include <uartBroker.h>
+#include <cstring>
 
+#include "callbacks.h"
 
 FDCAN_RxHeaderTypeDef RxHeader;
 uint8_t RxData[8];
 FDCAN_TxHeaderTypeDef TxHeader;
 uint8_t TxData[8];
 
-
-float get_float(const uint8_t* a_string, const int a_beginning)
-{
-	char hexValue[9];
-	strncpy(hexValue, (const char*)a_string + a_beginning, 8);
-	hexValue[8] = '\0'; // Null-terminate the string explicitly
-    uint32_t floatHex = strtoul(hexValue, NULL, 16); // Convert hexadecimal string to unsigned long
-    float floatValue;
-    memcpy(&floatValue, &floatHex, sizeof(floatValue)); // Convert unsigned long to float
-    return floatValue;
-}
-
-void motors_cmd_hex_cb(const uint8_t* a_message)
-{
-	krabi_msgs::motors_cmd motors_cmd_msg;
-	int i = 0;
-    const int offset = 1;
-    const int float_msg_size = 8;
-
-    motors_cmd_msg.enable_motors = get_float(a_message, offset + (i++)*float_msg_size) > 0.5;
-    motors_cmd_msg.override_PWM = get_float(a_message, offset + (i++)*float_msg_size) > 0.5;
-    motors_cmd_msg.PWM_override_left = get_float(a_message, offset + (i++)*float_msg_size);
-    motors_cmd_msg.PWM_override_right = get_float(a_message, offset + (i++)*float_msg_size);
-    motors_cmd_msg.reset_encoders = get_float(a_message, offset + (i++)*float_msg_size) > 0.5;
-
-    motors_cmd_cb(motors_cmd_msg);
-}
-
-void parameters_hex_cb(const uint8_t* a_message)
-{
-	krabi_msgs::motors_parameters motors_parameters_msg;
-    int i = 0;
-    const int offset = 1;
-    const int float_msg_size = 8;
-    motors_parameters_msg.max_current_left = get_float(a_message, offset + (i++)*float_msg_size);
-    motors_parameters_msg.max_current_right = get_float(a_message, offset + (i++)*float_msg_size);
-    motors_parameters_msg.max_current = get_float(a_message, offset + (i++)*float_msg_size);
-
-    parameters_cb(motors_parameters_msg);
-}
-
-void cmd_vel_hex_cb(const uint8_t* a_message)
-{
-	geometry_msgs::Twist twist_msg;
-    int i = 0;
-    const int offset = 1;
-    const int float_msg_size = 8;
-    twist_msg.linear.x = get_float(a_message, offset + (i++)*float_msg_size);
-    twist_msg.angular.z = get_float(a_message, offset + (i++)*float_msg_size);
-
-    cmd_vel_cb(twist_msg);
-}
-
-void enable_motor_hex_cb(const uint8_t* a_message)
-{
-	std_msgs::Bool enable_msg;
-    int i = 0;
-    const int offset = 1;
-    const int float_msg_size = 8;
-    enable_msg.data = get_float(a_message, offset + (i++)*float_msg_size) > 0.5;
-
-    enable_motor_cb(enable_msg);
-}
-
-void read_serial()
-{
-	//HAL_GPIO_WritePin(DIR_B_GPIO_Port, DIR_B_Pin, GPIO_PIN_SET); // Turn On LED
-	nb_updates_without_message = 0;
-
-
-	if(rx_line_buffer[0]=='e')
-	{
-		nb_messages_received++;
-		enable_motor_hex_cb(rx_line_buffer);
-	}
-	if(rx_line_buffer[0]=='v')
-	{
-		nb_messages_received++;
-		cmd_vel_hex_cb(rx_line_buffer);
-	}
-	if(rx_line_buffer[0]=='p')
-	{
-		nb_messages_received++;
-		parameters_hex_cb(rx_line_buffer);
-	}
-	if(rx_line_buffer[0]=='c')
-	{
-		nb_messages_received++;
-		motors_cmd_hex_cb(rx_line_buffer);
-	}
-}
-
-void motors_cmd_cb(const krabi_msgs::motors_cmd &motors_cmd_msg)
-{
-	CAN::MotorBoardCmdInput motors_cmd_can;
-	motors_cmd_can.PWM_override_left = motors_cmd_msg.PWM_override_left;
-	motors_cmd_can.PWM_override_right = motors_cmd_msg.PWM_override_right;
-	motors_cmd_can.enable_motors = motors_cmd_msg.enable_motors;
-	motors_cmd_can.override_PWM = motors_cmd_msg.override_PWM;
-	motors_cmd_can.reset_encoders = motors_cmd_msg.reset_encoders;
-
-	motors_cmd_cb(motors_cmd_can);
-}
-
-void motors_cmd_cb(const CAN::MotorBoardCmdInput &motors_cmd_msg)
-{
-	if (motors_cmd_msg.reset_encoders)
-	{
-		MotorBoard::set_odom(0, 0, 0);
-	}
-
-	MotorBoard::getDCMotor().set_enable_motors((bool)motors_cmd_msg.enable_motors);
-
-	if (!motors_cmd_msg.enable_motors) {
-		//MotorBoard::getDCMotor().resetMotors();
-		MotorBoard::getDCMotor().resetMotor(M_L);
-		MotorBoard::getDCMotor().resetMotor(M_R);
-
-		return;
-	}
-
-	if (motors_cmd_msg.override_PWM)
-	{
-		MotorBoard::getDCMotor().override_PWM(motors_cmd_msg.PWM_override_left, motors_cmd_msg.PWM_override_right);
-	}
-	else
-	{
-		MotorBoard::getDCMotor().stop_pwm_override();
-	}
-}
-
-void digital_outputs_cb(const CAN::DigitalOutputs &digital_outputs_msg)
-{
-	GPIO_PinState trans_0 = GPIO_PIN_RESET;
-	GPIO_PinState trans_1 = GPIO_PIN_RESET;
-	GPIO_PinState trans_2 = GPIO_PIN_RESET;
-	GPIO_PinState trans_3 = GPIO_PIN_RESET;
-	if(digital_outputs_msg.enable_outputs & (1<<9))
-	{
-		trans_0 = GPIO_PIN_SET;
-	}
-	if(digital_outputs_msg.enable_outputs & (1<<11))
-	{
-		trans_1 = GPIO_PIN_SET;
-	}
-	if(digital_outputs_msg.enable_outputs & (1<<13))
-	{
-		trans_2 = GPIO_PIN_SET;
-	}
-	if(digital_outputs_msg.enable_outputs & (1<<15))
-	{
-		trans_3 = GPIO_PIN_SET;
-	}
-
-	HAL_GPIO_WritePin(Trans0_GPIO_Port, Trans0_Pin, trans_0);
-	HAL_GPIO_WritePin(Trans1_GPIO_Port, Trans1_Pin, trans_1);
-	HAL_GPIO_WritePin(Trans2_GPIO_Port, Trans2_Pin, trans_2);
-	HAL_GPIO_WritePin(Trans3_GPIO_Port, Trans3_Pin, trans_3);
-}
-
-void parameters_cb(const krabi_msgs::motors_parameters& a_parameters)
-{
-	MotorBoard::getDCMotor().set_max_current(a_parameters.max_current);
-	MotorBoard::getDCMotor().set_max_current(a_parameters.max_current_left, a_parameters.max_current_right);
-}
-
-void cmd_vel_cb(const geometry_msgs::Twist& twist)
-{
-	MotorBoard::getDCMotor().set_speed_order(metersToTicks(twist.linear.x), radsToTicks(-twist.angular.z));
-}
-
-void enable_motor_cb(const std_msgs::Bool& enable)
-{
-	if(!enable.data) {
-		MotorBoard::getDCMotor().resetMotors();
-	}
-}
-
-void receiveUART(UART_HandleTypeDef *huart){
-	if (huart->Instance == USART2) {
-		test_message_received++;
-		memcpy(rx_line_buffer, rx_buffer, UART_MSG_SIZE);
-		read_serial();
-
-		/*int dma_buffer_offset = 0;
-
-		int i = 0;
-		while (i < RX_BUFFER_SIZE)
-		{
-			rx_line_buffer[offset_message_already_received + i] = rx_buffer[i];
-
-			if (rx_buffer[i] == '\n' || rx_buffer[i] == '\r')
-			{
-				break;
-			}
-			else
-			{
-				i++;
-			}
-		}
-
-		if (rx_buffer[i] == '\n' || rx_buffer[i] == '\r' ||
-				(offset_message_already_received + i > 1 && rx_line_buffer[offset_message_already_received + i-1] == '\\' && (rx_line_buffer[offset_message_already_received + i] == 'n' || rx_line_buffer[offset_message_already_received + i] == 'r' )))
-		{
-			// Message received !
-			read_serial();
-			offset_message_already_received = 0;
-		}
-		else
-		{
-			offset_message_already_received += i;
-
-			dma_buffer_offset += i;
-			// Ensure the buffer does not overflow
-			if (offset_message_already_received+RX_BUFFER_SIZE >= sizeof(rx_line_buffer)) {
-				// Buffer overflow, handle error or reset the buffer
-				offset_message_already_received = 0;
-			}
-		}*/
-	}
-
-
-}
-
-void float_to_hex(const float a_value, uint8_t* a_out, const int start_pos)
-{
-    uint32_t floatHex;
-    memcpy(&floatHex, &a_value, sizeof(a_value));
-    sprintf((char *)(a_out + start_pos), "%08" PRIX32, floatHex); // Convert to hexadecimal string
-
-}
-
-void publish_encoders(UART_HandleTypeDef * huart2)
-{
-	int start_pos = 0;
-	const int step = 8;
-
-	tx_e_line_buffer[start_pos] = 'e';
-	start_pos += 1;
-	tx_e_line_buffer[start_pos] = ':';
-	start_pos += 1;
-	float_to_hex(encoders_msg.encoder_right, tx_e_line_buffer, start_pos);
-	start_pos += step;
-	float_to_hex(encoders_msg.encoder_left, tx_e_line_buffer, start_pos);
-	start_pos += step;
-
-	tx_e_line_buffer[start_pos] = '\n';
-	start_pos += 2;
-
-	HAL_UART_Transmit_DMA(huart2, tx_e_line_buffer, start_pos);
-}
-
-// Define CRC parameters
-#define CRC_POLYNOMIAL 0x1021
-#define CRC_INITIAL_VALUE 0xFFFF
-
-// Function to calculate CRC
-uint16_t calculate_crc(const uint8_t *data, int length) {
-    uint16_t crc = CRC_INITIAL_VALUE;
-
-    for (int i = 0; i < length; i++) {
-        crc ^= data[i] << 8;
-        for (int j = 0; j < 8; j++) {
-            if (crc & 0x8000) {
-                crc = (crc << 1) ^ CRC_POLYNOMIAL;
-            } else {
-                crc <<= 1;
-            }
-        }
-    }
-
-    return crc;
-}
-
-void publish_odom_lighter(UART_HandleTypeDef * huart2)
-{
-	int start_pos = 0;
-	const int step = 8;
-
-	tx_o_line_buffer[start_pos] = 'o';
-	start_pos += 1;
-	tx_o_line_buffer[start_pos] = ':';
-	start_pos += 1;
-	float_to_hex(odom_lighter_msg.poseX, tx_o_line_buffer, start_pos);
-	start_pos += step;
-	float_to_hex(odom_lighter_msg.poseY, tx_o_line_buffer, start_pos);
-	start_pos += step;
-	float_to_hex(odom_lighter_msg.angleRz, tx_o_line_buffer, start_pos);
-	start_pos += step;
-	float_to_hex(odom_lighter_msg.speedVx, tx_o_line_buffer, start_pos);
-	start_pos += step;
-	float_to_hex(odom_lighter_msg.speedWz, tx_o_line_buffer, start_pos);
-	start_pos += step;
-
-	// Calculate CRC
-	uint16_t crc = calculate_crc(tx_o_line_buffer, start_pos);
-	tx_o_line_buffer[start_pos] = crc & 0xFF; // Low byte
-	tx_o_line_buffer[start_pos + 1] = crc >> 8; // High byte
-	start_pos += 2;
-
-	// Add and of line
-	tx_o_line_buffer[start_pos] = '\n';
-	start_pos += 1;
-
-	HAL_UART_Transmit_DMA(huart2, tx_o_line_buffer, start_pos);
-}
+uartBroker s_uart_broker;
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart){
-	receiveUART(huart);
+	s_uart_broker.receiveUART(huart);
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-	receiveUART(huart);
+	s_uart_broker.receiveUART(huart);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
@@ -437,47 +124,6 @@ float get_orientation_float(int32_t encoder1, int32_t encoder2, float offset)
         return (360.f + absolute_orientation); // reminder: abs_ori is < 0 here
 }
 
-constexpr float ticksToMillimeters(int32_t ticks)
-{
-	return (DIST_MM_PER_WHEEL_REVOLUTION * (float)ticks / TICKS_PER_WHEEL_REVOLUTION);
-}
-
-constexpr float ticksToMeters(int32_t ticks)
-{
-	return ticksToMillimeters(ticks) / 1000.f;
-}
-
-
-constexpr int32_t millimetersToTicks(float millimeters)
-{
-	return static_cast<int32_t>(millimeters * TICKS_PER_WHEEL_REVOLUTION/DIST_MM_PER_WHEEL_REVOLUTION);
-}
-
-constexpr int32_t metersToTicks(float meters)
-{
-	return millimetersToTicks(meters * 1000);
-}
-
-
-
-constexpr int32_t degreesToTicks(float degrees)
-{
-	return degrees * TICKS_PER_ROBOT_DEG;
-}
-constexpr int32_t radsToTicks(float rads)
-{
-	return degreesToTicks(rads*180/M_PI);
-}
-
-constexpr float ticksToDegrees(int32_t ticks)
-{
-	return ticks/TICKS_PER_ROBOT_DEG;
-}
-
-constexpr float ticksToRads(int32_t ticks)
-{
-	return ticksToDegrees(ticks) * M_PI/180.f;
-}
 /*
         Given current value of both encoders
         return the linear dist by approximating it as the average of both wheels' linear distances.
@@ -507,41 +153,6 @@ float MotorBoard::compute_linear_dist(const long encoder1, const long encoder2)
 
 void MotorBoard::update_inputs() {
 
-}
-
-void doResetUart(UART_HandleTypeDef * huart2)
-{
-	// 1. Disable UART and DMA
-	HAL_UART_DMAStop(huart2); // Stop DMA associated with UART2
-	HAL_UART_DeInit(huart2); // Deinitialize UART2
-
-	// 2. Reset UART Configuration
-	huart2->Instance = USART2;
-	huart2->Init.BaudRate = 115200;
-	huart2->Init.WordLength = UART_WORDLENGTH_8B;
-	huart2->Init.StopBits = UART_STOPBITS_1;
-	huart2->Init.Parity = UART_PARITY_NONE;
-	huart2->Init.Mode = UART_MODE_TX_RX;
-	huart2->Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	huart2->Init.OverSampling = UART_OVERSAMPLING_16;
-	huart2->Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-	huart2->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-
-	while (HAL_UART_Init(huart2) != HAL_OK)
-	{
-		toggleLed();
-		HAL_Delay(100);
-	}
-	while (HAL_UART_Receive_DMA(huart2, rx_buffer, UART_MSG_SIZE) != HAL_OK)
-	{
-		toggleLed();
-		HAL_Delay(300);
-	}
-}
-
-void MotorBoard::resetUart()
-{
-	doResetUart(huart2);
 }
 
 void MotorBoard::updateCurrent()
@@ -588,29 +199,12 @@ void MotorBoard::updateCurrent()
 }
 
 void MotorBoard::update() {
-	nb_updates_without_message++;
-
-	if (test_message_received - nb_messages_received > 4000)
-	{
-		toggleLed();
-		this->resetUart();
-		test_message_received = 0;
-		nb_messages_received = 0;
-	}
-
-	// Check if the heart beat is OK
-	if (nb_updates_without_message>1000)
-	{
-		toggleLed();
-		this->resetUart();
-		nb_updates_without_message = 0;
-	}
+	s_uart_broker.checkHeartBeat(huart2);
 
 	int16_t encoder_left = motors.get_encoder_ticks(M_L);
 	int16_t encoder_right = motors.get_encoder_ticks(M_R);
 
-	encoders_msg.encoder_left = encoder_left;
-	encoders_msg.encoder_right = encoder_right;
+	s_uart_broker.setEncodersMsg(encoder_left, encoder_right);
 
 	int32_t_encoder_left = fixOverflow(encoder_left, int32_t_encoder_left);
 	int32_t_encoder_right = fixOverflow(encoder_right, int32_t_encoder_right);
@@ -639,12 +233,9 @@ void MotorBoard::update() {
 	float speedVx = ticksToMeters(left_speed + right_speed)/2;
 	float speedWz = ticksToRads(right_speed - left_speed)/2; // rad/s
 
-	odom_lighter_msg.poseX = X;
-	odom_lighter_msg.poseY = Y;
-	odom_lighter_msg.angleRz = current_theta_rad;
-	odom_lighter_msg.speedVx = speedVx;
-	odom_lighter_msg.speedWz = speedWz;
-	publish_odom_lighter(huart2);
+	s_uart_broker.setOdomLighterMsg(X, Y, current_theta_rad, speedVx, speedWz);
+
+	s_uart_broker.publish_odom_lighter(huart2);
 
 	/* Set the data to be transmitted */
 	/*TxHeader.Identifier = CAN::can_ids::ODOMETRY_XY;
@@ -710,11 +301,7 @@ void MotorBoard::update() {
 
 	if (false && message_counter%100 == 0)
 	{
-		motors_msg.current_left = motors.get_current(M_L);
-		motors_msg.current_right = motors.get_current(M_R);
-
-		motors_msg.current_left_accumulated = motors.get_accumulated_current(M_L);
-		motors_msg.current_right_accumulated = motors.get_accumulated_current(M_R);
+		s_uart_broker.setMotorsMsg(s_uart_broker.getEncodersMsg(), motors.get_current(M_L), motors.get_current(M_R), motors.get_accumulated_current(M_L), motors.get_accumulated_current(M_R));
 
 		//motors_pub.publish(&motors_msg);
 	}
@@ -964,12 +551,7 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 	HAL_TIM_Base_Start_IT(a_loopTimHandler);
 	uint32_t waiting_time = 5; // ms
 
-	// Make sure that the Uart/DMA is correctly initialized, or signal it
-	while (HAL_UART_Receive_DMA(huart2, rx_buffer, UART_MSG_SIZE) != HAL_OK)
-	{
-		toggleLed();
-		HAL_Delay(300);
-	}
+	s_uart_broker.initDMA(huart2);
 
 	CAN::DigitalOutputs init_digital_outputs;
 	init_digital_outputs.enable_outputs = 0;
@@ -983,8 +565,6 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 
 		myboard.updateCurrent();
 		CAN_ProcessTxQueue(hcan);
-
-
 
 		HAL_Delay(waiting_time - 1); // ms
 	}

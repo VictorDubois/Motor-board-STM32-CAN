@@ -2,6 +2,9 @@
 #ifndef _CONSTANTS_H_
 #define _CONSTANTS_H_
 
+#include <stdint.h>
+#include <math.h>
+
 /*****************************
  *         PARAMETERS        *
  *****************************/
@@ -52,5 +55,54 @@
 	constexpr float TICKS_PER_ROBOT_DEG = TICKS_PER_ROBOT_DEG_THEORY;//* 0.96007158213; // Nb of diff tick (enc1 - enc2) it takes to rotate 1 deg
 #endif
 
+
+constexpr float ticksToMillimeters(int32_t ticks);
+constexpr float ticksToMeters(int32_t ticks);
+constexpr int32_t millimetersToTicks(float millimeters);
+constexpr int32_t metersToTicks(float meters);
+constexpr int32_t degreesToTicks(float degrees);
+constexpr int32_t radsToTicks(float rads);
+constexpr float ticksToDegrees(int32_t ticks);
+constexpr float ticksToRads(int32_t ticks);
+
+constexpr float ticksToMillimeters(int32_t ticks)
+{
+	return (DIST_MM_PER_WHEEL_REVOLUTION * (float)ticks / TICKS_PER_WHEEL_REVOLUTION);
+}
+
+constexpr float ticksToMeters(int32_t ticks)
+{
+	return ticksToMillimeters(ticks) / 1000.f;
+}
+
+constexpr int32_t millimetersToTicks(float millimeters)
+{
+	return static_cast<int32_t>(millimeters * TICKS_PER_WHEEL_REVOLUTION/DIST_MM_PER_WHEEL_REVOLUTION);
+}
+
+constexpr int32_t metersToTicks(float meters)
+{
+	return millimetersToTicks(meters * 1000);
+}
+
+constexpr int32_t degreesToTicks(float degrees)
+{
+	return degrees * TICKS_PER_ROBOT_DEG;
+}
+
+constexpr int32_t radsToTicks(float rads)
+{
+	return degreesToTicks(rads*180/M_PI);
+}
+
+constexpr float ticksToDegrees(int32_t ticks)
+{
+	return ticks/TICKS_PER_ROBOT_DEG;
+}
+
+constexpr float ticksToRads(int32_t ticks)
+{
+	return ticksToDegrees(ticks) * M_PI/180.f;
+}
 
 #endif
