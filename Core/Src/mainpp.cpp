@@ -24,6 +24,12 @@ extern "C" {
 
 uartBroker s_uart_broker;
 
+MotorBoard myboard;
+int i_loop = 0;
+bool init_done = false;
+FDCAN_HandleTypeDef* m_hcan = nullptr;
+
+
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart){
 	s_uart_broker.receiveUART(huart);
 }
@@ -34,9 +40,22 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 	if (htim->Instance == TIM15) {
-		MotorBoard::getDCMotor().update();
+		if (init_done)
+		{
+			MotorBoard::getDCMotor().update();
+
+
+			if (i_loop%3 == 0)
+			{
+				myboard.update();
+				myboard.updateCurrent();
+				CAN_ProcessTxQueue(m_hcan);
+			}
+			i_loop++;
+		}
 	}
 	if (htim->Instance == TIM7) {
+		// Used for microseconds clock
 	}
 }
 
@@ -240,7 +259,7 @@ void toggleLed()
 
 void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHandler, UART_HandleTypeDef * huart2, FDCAN_HandleTypeDef* hcan, ADC_HandleTypeDef* hadc2)
 {
-	MotorBoard myboard = MotorBoard(a_motorTimHandler, huart2, hcan, hadc2);
+	myboard = MotorBoard(a_motorTimHandler, huart2, hcan, hadc2);
 
 	__HAL_UART_CLEAR_OREFLAG(huart2); // Not sure if actually needed
 
@@ -252,7 +271,6 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 
 
 	HAL_TIM_Base_Start_IT(a_loopTimHandler);
-	uint32_t waiting_time = 5; // ms
 
 	s_uart_broker.initDMA(huart2);
 
@@ -261,14 +279,10 @@ void loop(TIM_HandleTypeDef* a_motorTimHandler, TIM_HandleTypeDef* a_loopTimHand
 	init_digital_outputs.enable_power= 0;
 	digital_outputs_cb(init_digital_outputs);
 
+	m_hcan = hcan;
+	init_done = true;
+
 	while(true) {
-
-		myboard.update();
-		//HAL_Delay(1); // ms
-
-		myboard.updateCurrent();
-		CAN_ProcessTxQueue(hcan);
-
-		HAL_Delay(waiting_time - 1); // ms
+		HAL_Delay(1); // ms
 	}
 }
