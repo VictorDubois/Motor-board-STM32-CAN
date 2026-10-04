@@ -65,7 +65,7 @@ DCMotor::DCMotor(DCMotorHardware* a_hardware, CurrentReader* a_current_reader) :
 	m_angular_pid_i = 0.10f;
 	m_angular_pid_d = 0.0f;
 
-	last_update_time = HAL_GetTick();
+	last_update_time = hardware->getMicroSecondsElapsed();
 
 	override_pwm = false;
 	stopped_timeout = 0;
@@ -358,14 +358,8 @@ void DCMotor::control_ramp_speed_polar(void) {
 
 	limitLinearFirst(linear_speed_error, angular_speed_error, max_speed_delta);
 
-	uint32_t current_time = HAL_GetTick(); // in ms
-	dt = (current_time - last_update_time)/1000.f; // is seconds
-
-	if (dt <= 0.0f)
-	{
-		// SI HAL_GetTick() n'est pas assez précis
-		dt = SAMPLING_USEC / 1e6f;
-	}
+	uint16_t current_time = hardware->getMicroSecondsElapsed();
+	dt = (current_time - last_update_time)/1000000.f; // is seconds
 
 	last_update_time = current_time;
 

@@ -29,7 +29,8 @@ public:
 			const int32_t motor_right_timer_channel,
 			TIM_HandleTypeDef* motor_left_timer,
 			const int32_t motor_left_timer_channel,
-			FDCAN_HandleTypeDef* hcan);
+			FDCAN_HandleTypeDef* hcan,
+			TIM_TypeDef* clock_timer);
 	~DCMotorHardware();
 
 	void resetEncodersCounter();
@@ -53,6 +54,11 @@ public:
 	 */
 	uint32_t getMilliSecondsElapsed();
 
+	/**
+	 * @brief returns the number of microseconds since last reset, resets at 65535 (16bit timer)
+	 */
+	uint16_t getMicroSecondsElapsed();
+
 private:
 	GPIO_TypeDef* dir_right_gpio_bank;
 	uint16_t dir_right_gpio;
@@ -65,6 +71,7 @@ private:
 	TIM_HandleTypeDef* motor_left_timer;
 	int32_t motor_left_timer_channel;
 	FDCAN_HandleTypeDef* hcan;
+	TIM_TypeDef* clock_timer;
 	int16_t m_encoder_left_tick = 0;
 	int16_t m_encoder_right_tick = 0;
 };

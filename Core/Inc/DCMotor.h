@@ -223,7 +223,7 @@ private:
 	float linear_speed_integ_error;
 	float angular_speed_integ_error;
 
-	volatile int32_t last_update_time;
+	volatile int16_t last_update_time;
 
 	volatile uint32_t limitLinFirstWasUsed = 0;
 };

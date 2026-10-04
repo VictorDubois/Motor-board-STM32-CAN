@@ -17,7 +17,8 @@ DCMotorHardware::DCMotorHardware(TIM_TypeDef* a_encoder_right_timer,
 		const int32_t a_motor_right_timer_channel,
 		TIM_HandleTypeDef* a_motor_left_timer,
 		const int32_t a_motor_left_timer_channel,
-		FDCAN_HandleTypeDef* a_hcan)
+		FDCAN_HandleTypeDef* a_hcan,
+		TIM_TypeDef* a_clock_timer)
 	:hcan(a_hcan){
 	dir_right_gpio_bank = DIR_B_GPIO_Port;
 	dir_right_gpio = DIR_B_Pin;
@@ -29,6 +30,7 @@ DCMotorHardware::DCMotorHardware(TIM_TypeDef* a_encoder_right_timer,
 	motor_right_timer_channel = a_motor_right_timer_channel;
 	motor_left_timer = a_motor_left_timer;
 	motor_left_timer_channel = a_motor_left_timer_channel;
+	clock_timer = a_clock_timer;
 
 	HAL_GPIO_WritePin(BRAKE_GPIO_Port, BRAKE_Pin, GPIO_PIN_RESET);//BRAKE
 	//HAL_GPIO_WritePin(BRAKE_B_GPIO_Port, BRAKE_Pin, GPIO_PIN_RESET);//BRAKE
@@ -69,6 +71,10 @@ uint32_t DCMotorHardware::getMilliSecondsElapsed() {
 	return HAL_GetTick();
 }
 
+uint16_t DCMotorHardware::getMicroSecondsElapsed()
+{
+	return clock_timer->CNT;
+}
 
 void DCMotorHardware::sendMotorSpeed(const int32_t pwm_left, const int32_t pwm_right) {
 	sendMotorSpeedCAN(pwm_left, pwm_right);
